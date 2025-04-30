@@ -1,0 +1,197 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/*App Shell as a column flex container */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: url("./assets/tails.jpg") no-repeat center center;
+  background-size: cover;
+  color: white;
+}
+
+/* 3) Make the main content area grow */
+.content-wrapper {
+  flex: 1;
+
+}
+
+
+.btn-outline-primary,
+.btn-primary,
+.btn-outline-info,
+.btn-info {
+  --glow-start: #ff2674;
+  --glow-end:   #aa00ff;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--glow-start), var(--glow-end));
+  border-color: var(--glow-end);
+  color: white !important;
+}
+.btn-primary:hover {
+  background: linear-gradient(90deg, var(--glow-end), var(--glow-start));
+}
+
+.btn-outline-primary,
+.btn-outline-info {
+  color: var(--glow-start);
+  border-color: var(--glow-start);
+}
+.btn-outline-primary:hover,
+.btn-outline-info:hover {
+  background: var(--glow-start);
+  color: white;
+  border-color: var(--glow-end);
+}
+
+/* cards and panels */
+.card,
+.glass-panel,
+.login-card {
+  background: rgba(14,14,20,0.8);
+  border: 1px solid rgba(255,38,126,0.4);
+}
+
+.navbar-dark .navbar-nav .nav-link,
+.navbar-dark .navbar-brand {
+  color: #ff2674;
+}
+.navbar-dark .navbar-nav .nav-link.active {
+  color: #aa00ff;
+}
+
+.card,
+.card.bg-dark,
+.list-group-item,
+.bg-secondary {
+  background: rgba(14, 14, 20, 0.8) !important;
+  border: 1px solid rgba(255, 38, 126, 0.4) !important;
+  box-shadow: 0 0 20px rgba(255, 38, 126, 0.4) !important;
+}
+
+/* Hero panels */
+.p-5.mb-4.bg-dark {
+  background: rgba(14, 14, 20, 0.8) !important;
+  border: 1px solid rgba(255, 38, 126, 0.4) !important;
+  box-shadow: 0 0 20px rgba(255, 38, 126, 0.4) !important;
+}
+
+/* Navbar background + bottom border */
+.navbar-dark.bg-dark {
+  background: rgba(20, 20, 20, 0.9) !important;
+  border-bottom: 1px solid rgba(255, 38, 126, 0.4);
+  box-shadow: 0 2px 10px rgba(255, 38, 126, 0.4);
+}
+
+/* Active nav-link highlight */
+.navbar-dark .navbar-nav .nav-link.active {
+  background: rgba(170, 0, 255, 0.2);
+  border-radius: 4px;
+}
+
+/* Generate wrapper */
+.generate-wrapper {
+  padding: 1rem;
+  background: rgba(14, 14, 20, 0.8);
+  border: 1px solid rgba(255, 38, 126, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(255, 38, 126, 0.4);
+}
+.generate-wrapper h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Public quizzes search box */
+.PublicQuizzes .form-control-sm {
+  background: rgba(14,14,20,0.8) !important;
+  border: 1px solid rgba(255,38,126,0.4) !important;
+  box-shadow: 0 0 10px rgba(255,38,126,0.4) inset !important;
+  color: white !important;
+}
+.PublicQuizzes .form-control-sm::placeholder {
+  color: rgba(255,255,255,0.6) !important;
+}
+
+/* Form wrapper */
+.form-wrapper {
+  padding: 1rem;
+  background: rgba(14,14,20,0.8);
+  border: 1px solid rgba(255,38,126,0.4);
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(255,38,126,0.4);
+}
+.form-wrapper .form-control-sm,
+.form-wrapper .form-control-sm:focus {
+  background: rgba(100,100,110,0.6) !important;
+  border: 1px solid rgba(255,38,126,0.6) !important;
+  box-shadow: inset 0 0 10px rgba(255,38,126,0.4) !important;
+  color: white !important;
+}
+.form-wrapper input[type="file"].form-control-sm {
+  padding: 0.25rem 0.5rem;
+  background: rgba(100,100,110,0.6) !important;
+  border: 1px solid rgba(255,38,126,0.6) !important;
+  color: white !important;
+}
+
+/* Question cards */
+.question-card {
+  background: rgba(14,14,20,0.8) !important;
+  border: 1px solid rgba(255,38,126,0.4) !important;
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(255,38,126,0.4);
+}
+.list-group-item.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1050;
+}
+
+/* Admin utilities */
+.neon-border {
+  border: 1px solid rgba(255, 0, 150, 0.6);
+  border-radius: 0.5rem;
+}
+.neon-border-hover .active,
+.neon-border-hover:hover {
+  box-shadow: 0 0 8px rgba(255, 0, 150, 0.8);
+  border-color: #ff0099;
+}
+
+.btn-gradient {
+  background: linear-gradient(90deg, #ff2674, #aa00ff);
+  color: white;
+  border: none;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(170, 0, 255, 0.6);
+}
+
+.form-control-sm,
+.form-select-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.admin-panel-card {
+  padding: 2rem;
+}
+
+
+
+

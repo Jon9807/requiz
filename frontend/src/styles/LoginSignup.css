@@ -1,0 +1,82 @@
+
+/* LoginSignup.css */
+.login-container {
+  display: flex;
+  height: 100vh;
+  background: url("../assets/background.jpg") no-repeat center center;
+  background-size: cover;
+  color: white;
+  overflow: hidden;
+  padding: 0 1rem;
+}
+
+.login-left {
+  flex: 0 0 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  width: 100%;
+  background: rgba(14, 14, 20, 0.6);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 0 40px rgba(255, 0, 120, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.login-card .form-control {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.login-card .form-control::placeholder {
+  color: #bbb;
+}
+
+.login-card .btn {
+  background: linear-gradient(to right, #ff2674, #aa00ff);
+  color: white;
+  font-weight: 500;
+  border: none;
+}
+
+.logo {
+  height: 48px;
+}
+
+.nav-btns {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.nav-btns button {
+  padding: 0.4rem 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  background: transparent;
+  transition: background 0.2s, box-shadow 0.2s;
+  font-weight: 500;
+}
+
+.nav-btns button.active {
+  background: linear-gradient(to right, #ff2674, #aa00ff);
+  box-shadow: 0 0 10px rgba(255, 0, 150, 0.5);
+}
+
+.nav-btns button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+    height: 100px;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  

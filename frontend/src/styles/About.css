@@ -1,0 +1,106 @@
+/* About.css */
+
+.about-page {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: #ffffff;
+  }
+  
+  .about-hero {
+    background: rgba(14, 14, 20, 0.85);
+    border: 1px solid rgba(255, 38, 126, 0.4);
+    box-shadow: 0 0 20px rgba(255, 38, 126, 0.4);
+    border-radius: 12px;
+    padding: 4rem 2rem;
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  
+  .about-hero h1 {
+    font-size: 2.75rem;
+    margin-bottom: 0.5rem;
+    color: #ff2674;
+  }
+  
+  .about-hero p {
+    font-size: 1.25rem;
+    color: #dddddd;
+  }
+  
+  .about-section,
+  .about-features,
+  .about-contact {
+    background: rgba(14, 14, 20, 0.8);
+    border: 1px solid rgba(255, 38, 126, 0.4);
+    box-shadow: 0 0 16px rgba(255, 38, 126, 0.4);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .about-section h2,
+  .about-features h2,
+  .about-contact h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    color: #ff2674;
+  }
+  
+  .about-section p,
+  .about-contact p {
+    color: #cccccc;
+    line-height: 1.6;
+  }
+  
+  .about-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .about-features ul li {
+    background: rgba(20, 20, 30, 0.6);
+    border-radius: 6px;
+    padding: 1rem;
+    transition: background 0.2s;
+  }
+  
+  .about-features ul li:hover {
+    background: rgba(255, 38, 126, 0.1);
+  }
+  
+  .about-features ul li strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    font-size: 1.1rem;
+  }
+  
+  .about-features ul li span {
+    color: #dddddd;
+    font-size: 0.95rem;
+  }
+  
+  .social-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+  }
+  
+  .social-links a {
+    color: #ffffff;
+    font-size: 2rem;
+    transition: color 0.2s, transform 0.2s;
+  }
+  
+  .social-links a:hover {
+    color: #ff2674;
+    transform: scale(1.2);
+  }
+  
+  
