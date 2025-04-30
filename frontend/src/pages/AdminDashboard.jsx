@@ -1,28 +1,33 @@
 // AdminDashboard.jsx
 import React, { useEffect, useState } from "react";
+import { API_BASE } from "../config";
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({ userCount: 0, quizCount: 0, questionCount: 0 });
+  const [stats, setStats] = useState({
+    userCount: 0,
+    quizCount: 0,
+    questionCount: 0,
+  });
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost/re-quiz-app/backend/index.php?action=get_admin_stats", {
+    fetch(`${API_BASE}?action=get_admin_stats`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.stats) {
           setStats(data.stats);
         } else {
           setMessage(data.message || "No stats available.");
         }
       })
-      .catch(err => setMessage("Error: " + err.message));
+      .catch((err) => setMessage("Error: " + err.message));
   }, []);
 
   return (

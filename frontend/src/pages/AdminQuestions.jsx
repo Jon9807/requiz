@@ -1,35 +1,35 @@
 // src/pages/AdminQuestions.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { API_BASE } from "../config"; // adjust path if needed
 
 const AdminQuestions = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState({ text: '', type: '' });
+  const [message, setMessage] = useState({ text: "", type: "" });
   const [delQuestion, setDelQuestion] = useState(null);
   const [editQuestion, setEditQuestion] = useState(null);
   const [editForm, setEditForm] = useState({
-    question: '',
-    option_a: '',
-    option_b: '',
-    option_c: '',
-    option_d: '',
-    correct_option: '',
+    question: "",
+    option_a: "",
+    option_b: "",
+    option_c: "",
+    option_d: "",
+    correct_option: "",
   });
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
 
   // Load all questions
   const loadQuestions = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        'http://localhost/re-quiz-app/backend/index.php?action=get_all_questions',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`${API_BASE}?action=get_all_questions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       setQuestions(data.questions || []);
     } catch {
-      setMessage({ text: 'Failed to load questions', type: 'danger' });
+      setMessage({ text: "Failed to load questions", type: "danger" });
     } finally {
       setLoading(false);
     }
@@ -42,29 +42,26 @@ const AdminQuestions = () => {
   // Delete a question
   const handleDelete = async () => {
     try {
-      const res = await fetch(
-        'http://localhost/re-quiz-app/backend/index.php?action=delete_question',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ question_id: delQuestion.id }),
-        }
-      );
+      const res = await fetch(`${API_BASE}?action=delete_question`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ question_id: delQuestion.id }),
+      });
       const data = await res.json();
       if (res.ok) {
         setQuestions((q) => q.filter((x) => x.id !== delQuestion.id));
-        setMessage({ text: 'Question deleted', type: 'success' });
+        setMessage({ text: "Question deleted", type: "success" });
       } else {
-        setMessage({ text: data.message || 'Delete failed', type: 'danger' });
+        setMessage({ text: data.message || "Delete failed", type: "danger" });
       }
     } catch {
-      setMessage({ text: 'Delete error', type: 'danger' });
+      setMessage({ text: "Delete error", type: "danger" });
     } finally {
       setDelQuestion(null);
-      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
     }
   };
 
@@ -84,43 +81,44 @@ const AdminQuestions = () => {
   // Save edits
   const handleSave = async () => {
     try {
-      const res = await fetch(
-        'http://localhost/re-quiz-app/backend/index.php?action=update_question',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            question_id: editQuestion.id,
-            question: editForm.question,
-            option_a: editForm.option_a,
-            option_b: editForm.option_b,
-            option_c: editForm.option_c,
-            option_d: editForm.option_d,
-            correct_option: editForm.correct_option.toUpperCase(),
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}?action=update_question`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          question_id: editQuestion.id,
+          question: editForm.question,
+          option_a: editForm.option_a,
+          option_b: editForm.option_b,
+          option_c: editForm.option_c,
+          option_d: editForm.option_d,
+          correct_option: editForm.correct_option.toUpperCase(),
+        }),
+      });
       const data = await res.json();
       if (res.ok) {
         setQuestions((qs) =>
           qs.map((q) =>
             q.id === editQuestion.id
-              ? { ...q, ...editForm, correct_option: editForm.correct_option.toUpperCase() }
+              ? {
+                  ...q,
+                  ...editForm,
+                  correct_option: editForm.correct_option.toUpperCase(),
+                }
               : q
           )
         );
-        setMessage({ text: 'Question updated', type: 'success' });
+        setMessage({ text: "Question updated", type: "success" });
       } else {
-        setMessage({ text: data.message || 'Update failed', type: 'danger' });
+        setMessage({ text: data.message || "Update failed", type: "danger" });
       }
     } catch {
-      setMessage({ text: 'Update error', type: 'danger' });
+      setMessage({ text: "Update error", type: "danger" });
     } finally {
       setEditQuestion(null);
-      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+      setTimeout(() => setMessage({ text: "", type: "" }), 3000);
     }
   };
 
@@ -179,9 +177,12 @@ const AdminQuestions = () => {
 
       {/* Delete Modal */}
       {delQuestion && (
-        <div className="modal fade show" style={{ display: 'block' }}>
+        <div className="modal fade show" style={{ display: "block" }}>
           <div className="modal-backdrop fade show"></div>
-          <div className="modal-dialog modal-dialog-centered" style={{ zIndex: 2000 }}>
+          <div
+            className="modal-dialog modal-dialog-centered"
+            style={{ zIndex: 2000 }}
+          >
             <div className="modal-content bg-dark text-light neon-glow border-0">
               <div className="modal-header">
                 <h5 className="modal-title">Delete Question?</h5>
@@ -203,7 +204,10 @@ const AdminQuestions = () => {
                 >
                   Cancel
                 </button>
-                <button className="btn btn-sm btn-danger" onClick={handleDelete}>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={handleDelete}
+                >
                   Yes, Delete
                 </button>
               </div>
@@ -214,9 +218,12 @@ const AdminQuestions = () => {
 
       {/* Edit Modal */}
       {editQuestion && (
-        <div className="modal fade show" style={{ display: 'block' }}>
+        <div className="modal fade show" style={{ display: "block" }}>
           <div className="modal-backdrop fade show"></div>
-          <div className="modal-dialog modal-dialog-centered" style={{ zIndex: 2000 }}>
+          <div
+            className="modal-dialog modal-dialog-centered"
+            style={{ zIndex: 2000 }}
+          >
             <div className="modal-content bg-dark text-light neon-glow border-0">
               <div className="modal-header">
                 <h5 className="modal-title">Edit Question</h5>
@@ -233,25 +240,38 @@ const AdminQuestions = () => {
                     rows={2}
                     className="form-control form-control-sm"
                     value={editForm.question}
-                    onChange={(e) => setEditForm((f) => ({ ...f, question: e.target.value }))}
+                    onChange={(e) =>
+                      setEditForm((f) => ({ ...f, question: e.target.value }))
+                    }
                   />
                 </div>
-                {['option_a', 'option_b', 'option_c', 'option_d'].map((opt, i) => (
-                  <div className="mb-2" key={opt}>
-                    <label className="form-label">Option {String.fromCharCode(65 + i)}</label>
-                    <input
-                      className="form-control form-control-sm"
-                      value={editForm[opt]}
-                      onChange={(e) => setEditForm((f) => ({ ...f, [opt]: e.target.value }))}
-                    />
-                  </div>
-                ))}
+                {["option_a", "option_b", "option_c", "option_d"].map(
+                  (opt, i) => (
+                    <div className="mb-2" key={opt}>
+                      <label className="form-label">
+                        Option {String.fromCharCode(65 + i)}
+                      </label>
+                      <input
+                        className="form-control form-control-sm"
+                        value={editForm[opt]}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, [opt]: e.target.value }))
+                        }
+                      />
+                    </div>
+                  )
+                )}
                 <div className="mb-3">
                   <label className="form-label">Correct Option (A–D)</label>
                   <input
                     className="form-control form-control-sm"
                     value={editForm.correct_option}
-                    onChange={(e) => setEditForm((f) => ({ ...f, correct_option: e.target.value.toUpperCase() }))}
+                    onChange={(e) =>
+                      setEditForm((f) => ({
+                        ...f,
+                        correct_option: e.target.value.toUpperCase(),
+                      }))
+                    }
                   />
                 </div>
               </div>
