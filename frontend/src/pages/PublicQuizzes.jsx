@@ -1,6 +1,7 @@
-// PublicQuizzes.jsx
+// src/pages/PublicQuizzes.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE } from "../config"; // update path if needed
 
 const PublicQuizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -8,14 +9,10 @@ const PublicQuizzes = () => {
   const [message, setMessage] = useState("");
 
   const fetchQuizzes = (query = "") => {
-    let url = "";
-    if (query) {
-      url = `http://localhost/re-quiz-app/backend/index.php?action=search_public_quizzes&q=${encodeURIComponent(
-        query
-      )}`;
-    } else {
-      url = `http://localhost/re-quiz-app/backend/index.php?action=public_quizzes`;
-    }
+    const url = query
+      ? `${API_BASE}?action=search_public_quizzes&q=${encodeURIComponent(query)}`
+      : `${API_BASE}?action=public_quizzes`;
+
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
