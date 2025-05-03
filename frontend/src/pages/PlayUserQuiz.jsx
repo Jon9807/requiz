@@ -94,7 +94,7 @@ const PlayUserQuiz = () => {
     );
   }
 
-  // Main quiz UI (identical style to QuizPlay.jsx)
+  // Main quiz UI
   const q = questions[currentIndex];
   const handleOption = (opt) => {
     if (selectedOption) return;

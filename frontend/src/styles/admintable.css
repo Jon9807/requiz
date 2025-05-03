@@ -42,7 +42,6 @@
     min-width: 200px;
   }
   
-  /* Keep action buttons from stacking */
   .table td .btn {
     margin: 2px;
     white-space: nowrap;

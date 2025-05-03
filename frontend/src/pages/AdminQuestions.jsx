@@ -1,6 +1,6 @@
 // src/pages/AdminQuestions.jsx
 import React, { useState, useEffect } from "react";
-import { API_BASE } from "../config"; // adjust path if needed
+import { API_BASE } from "../config"; 
 
 const AdminQuestions = () => {
   const [questions, setQuestions] = useState([]);
@@ -223,6 +223,7 @@ const AdminQuestions = () => {
           </div>
         </div>
       )}
+      
 
       {/* Edit Modal */}
       {editQuestion && (

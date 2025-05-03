@@ -17,12 +17,6 @@ const AdminPanel = () => {
               Dashboard
             </NavLink>
             <NavLink
-              to="/admin/create-quiz"
-              className="list-group-item list-group-item-action bg-dark text-light neon-border-hover"
-            >
-              Create Quiz
-            </NavLink>
-            <NavLink
               to="/admin/questions"
               className="list-group-item list-group-item-action bg-dark text-light neon-border-hover"
             >

@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE } from "../config"; // ✅ using global config
+import { API_BASE } from "../config"; 
 
 export default function QuizGenerator() {
   const [categories, setCategories] = useState([]);
   const [category, setCategory]   = useState("");
   const [difficulty, setDifficulty] = useState("Medium");
-  const [num, setNum]             = useState(10);
+  const [num, setNum] = useState(1);
   const [error, setError]         = useState("");
   const [loading, setLoading]     = useState(false);
   const navigate                  = useNavigate();
@@ -52,7 +52,6 @@ export default function QuizGenerator() {
       );
       const data = await res.json();
       if (data.status === 200 && Array.isArray(data.quiz)) {
-        // push into the play screen
         navigate("/play-quiz", {
           state: { quizData: data.quiz, from: "/generate-quiz" },
         });
@@ -122,6 +121,7 @@ export default function QuizGenerator() {
               min={1}
               max={15}
               value={num}
+              onFocus={(e) => e.target.select()}
               onChange={e =>
                 setNum(Math.max(1, Math.min(15, Number(e.target.value))))
               }

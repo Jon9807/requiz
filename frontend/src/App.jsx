@@ -14,7 +14,6 @@ import Profile from "./pages/Profile";
 import PlayUserQuiz from "./pages/PlayUserQuiz";
 import AdminPanel from "./pages/AdminPanel";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminCreateQuiz from "./pages/AdminCreateQuiz";
 import AdminQuestions from "./pages/AdminQuestions";
 import AdminQuizzes from "./pages/AdminQuizzes";
 import AdminUsers from "./pages/AdminUsers";
@@ -53,7 +52,6 @@ function App() {
             {/* Admin Routes */}
             <Route path="/admin/*" element={<AdminPanel />}>
               <Route index element={<AdminDashboard />} />
-              <Route path="create-quiz" element={<AdminCreateQuiz />} />
               <Route path="questions" element={<AdminQuestions />} />
               <Route path="quizzes" element={<AdminQuizzes />} />
               <Route path="users" element={<AdminUsers />} />

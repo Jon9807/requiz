@@ -1,3 +1,4 @@
+//About.jsx
 import React from "react";
 import { Mail, Instagram, Facebook } from "lucide-react";
 import "../styles/About.css";

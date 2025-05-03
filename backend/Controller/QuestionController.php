@@ -1,13 +1,8 @@
 <?php
-// Backend/Controller/QuestionController.php
+// backend/Controller/QuestionController.php
 namespace Controller;
 
-/**
- * Strip smart quotes, control-chars and escape for SQL.
- *
- * @param string $text
- * @return string
- */
+
 function sanitizeQuestion(string $text): string
 {
     $text = trim($text);
@@ -23,8 +18,8 @@ function sanitizeQuestion(string $text): string
         '•' => '-',
     ];
     $text = strtr($text, $replacements);
-    $text = str_replace("'", "''", $text);
-    return $text;
+    // escape single-quotes for SQL
+    return str_replace("'", "''", $text);
 }
 
 use Model\Question;
@@ -36,35 +31,44 @@ class QuestionController
 
     public function __construct($conn, $secretKey)
     {
-        $this->conn = $conn;
+        $this->conn      = $conn;
         $this->secretKey = $secretKey;
     }
 
-    public function createQuizQuestion($data, $userId)
+   
+    public function createQuizQuestion(array $data, int $userId): array
     {
+        //Validate required fields
         if (
-            empty($data['quiz_id']) || empty($data['question']) ||
-            empty($data['option_a']) || empty($data['option_b']) ||
-            empty($data['option_c']) || empty($data['option_d']) ||
+            empty($data['quiz_id']) ||
+            empty($data['question']) ||
+            empty($data['option_a']) ||
+            empty($data['option_b']) ||
+            empty($data['option_c']) ||
+            empty($data['option_d']) ||
             empty($data['correct_option'])
         ) {
             return ['status' => 400, 'message' => 'All fields are required'];
         }
 
-        $quizId = intval($data['quiz_id']);
-        $questionText = sanitizeQuestion($data['question']);
-        $optionA      = sanitizeQuestion($data['option_a']);
-        $optionB      = sanitizeQuestion($data['option_b']);
-        $optionC      = sanitizeQuestion($data['option_c']);
-        $optionD      = sanitizeQuestion($data['option_d']);
+        //Sanitize inputs
+        $quizId        = intval($data['quiz_id']);
+        $questionText  = sanitizeQuestion($data['question']);
+        $optionA       = sanitizeQuestion($data['option_a']);
+        $optionB       = sanitizeQuestion($data['option_b']);
+        $optionC       = sanitizeQuestion($data['option_c']);
+        $optionD       = sanitizeQuestion($data['option_d']);
         $correctOption = strtoupper(trim($data['correct_option']));
-
-        if (!in_array($correctOption, ['A', 'B', 'C', 'D'])) {
+        if (!in_array($correctOption, ['A','B','C','D'])) {
             return ['status' => 400, 'message' => 'Correct option must be A, B, C, or D'];
         }
 
-        //Fetch the quiz's category and subcategory
-        $stmt = $this->conn->prepare("SELECT category_id, subcategory_id FROM user_quizzes WHERE id = ?");
+        //Fetch quiz metadata (category, subcategory, difficulty)
+        $stmt = $this->conn->prepare("
+            SELECT category_id, subcategory_id, difficulty
+              FROM user_quizzes
+             WHERE id = ?
+        ");
         $stmt->bind_param("i", $quizId);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -72,32 +76,37 @@ class QuestionController
             $stmt->close();
             return ['status' => 400, 'message' => 'Quiz not found'];
         }
-        $quiz = $result->fetch_assoc();
+        $quiz         = $result->fetch_assoc();
         $stmt->close();
 
-        $categoryId = intval($quiz['category_id']);
+        $categoryId   = intval($quiz['category_id']);
         $quizSubcatId = $quiz['subcategory_id'] ? intval($quiz['subcategory_id']) : null;
+        //inherit difficulty from the quiz
+        $difficulty   = in_array($quiz['difficulty'], ['Easy','Medium','Hard'])
+                        ? $quiz['difficulty']
+                        : 'Medium';
 
-        //Determine subcategory
+        //Determine final subcategory (if not already set)
         $subcategoryId = $quizSubcatId;
         if (!$subcategoryId && isset($data['subcategory_id'])) {
-            $subcategoryId = intval($data['subcategory_id']);
-
-            $checkStmt = $this->conn->prepare("SELECT id FROM subcategories WHERE id = ? AND category_id = ?");
-            $checkStmt->bind_param("ii", $subcategoryId, $categoryId);
+            $candidate = intval($data['subcategory_id']);
+            $checkStmt = $this->conn->prepare("
+                SELECT id FROM subcategories
+                 WHERE id = ? AND category_id = ?
+            ");
+            $checkStmt->bind_param("ii", $candidate, $categoryId);
             $checkStmt->execute();
-            $checkResult = $checkStmt->get_result();
-            if ($checkResult->num_rows === 0) {
+            if ($checkStmt->get_result()->num_rows === 0) {
                 $checkStmt->close();
                 return ['status' => 400, 'message' => 'Invalid subcategory for selected category'];
             }
             $checkStmt->close();
+            $subcategoryId = $candidate;
         }
 
-        $difficulty = 'Medium'; //stat for now
-
+        //insert into questions table
         $questionModel = new Question($this->conn);
-        $questionId = $questionModel->create(
+        $questionId    = $questionModel->create(
             $userId,
             $categoryId,
             $difficulty,
@@ -109,22 +118,29 @@ class QuestionController
             $correctOption,
             $subcategoryId
         );
-
-        if (!$questionId) {
+        if (! $questionId) {
             return ['status' => 500, 'message' => 'Failed to create question'];
         }
 
-        $stmt = $this->conn->prepare("INSERT INTO user_quiz_questions (quiz_id, question_id) VALUES (?, ?)");
-        if (!$stmt) {
-            return ['status' => 500, 'message' => 'Failed to prepare linking statement'];
-        }
-        $stmt->bind_param("ii", $quizId, $questionId);
-        if ($stmt->execute()) {
-            $stmt->close();
-            return ['status' => 201, 'message' => 'Question created and added to quiz', 'question_id' => $questionId];
+        //Link question to the quiz
+        $linkStmt = $this->conn->prepare("
+            INSERT INTO user_quiz_questions (quiz_id, question_id)
+            VALUES (?, ?)
+        ");
+        $linkStmt->bind_param("ii", $quizId, $questionId);
+        if ($linkStmt->execute()) {
+            $linkStmt->close();
+            return [
+                'status'      => 201,
+                'message'     => 'Question created and added to quiz',
+                'question_id'=> $questionId
+            ];
         } else {
-            $stmt->close();
-            return ['status' => 500, 'message' => 'Question created but failed to link to quiz'];
+            $linkStmt->close();
+            return [
+                'status'  => 500,
+                'message' => 'Question created but failed to link to quiz'
+            ];
         }
     }
 }

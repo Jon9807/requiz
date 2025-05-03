@@ -13,7 +13,6 @@ export default function Navbar() {
 
   if (!ready) return null;
 
-  // Build avatar URL only if they have uploaded one
   const avatarUrl =
     token && user && user.profile_pic
       ? `${API_BASE.replace("/index.php", "")}/${user.profile_pic}`

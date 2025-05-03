@@ -1,6 +1,6 @@
 // src/pages/AdminUsers.jsx
 import React, { useState, useEffect } from "react";
-import { API_BASE } from "../config"; // adjust if your path is different
+import { API_BASE } from "../config"; 
 
 
 const AdminUsers = () => {

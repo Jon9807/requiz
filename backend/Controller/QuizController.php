@@ -1,5 +1,5 @@
 <?php
-//Backend/Controller/QuizController.php
+// backend/Controller/QuizController.php
 
 namespace Controller;
 
@@ -10,28 +10,45 @@ class QuizController
     private $conn;
     private $secretKey;
 
-    //constructor accepts the database connection and secret key.
+    //Constructor: accepts the database connection and secret key
     public function __construct($conn, $secretKey)
     {
-        $this->conn = $conn;
+        $this->conn      = $conn;
         $this->secretKey = $secretKey;
     }
 
-    //create a new quiz
-    public function create($data, $userId)
-    {
-        $name = isset($data['name']) ? trim($data['name']) : '';
-        $description = isset($data['description']) ? trim($data['description']) : '';
-        $isPublic = isset($data['is_public']) ? intval($data['is_public']) : 0;
-        $categoryId = isset($data['category_id']) ? intval($data['category_id']) : 0;
-        $subcategoryId = isset($data['subcategory_id']) ? intval($data['subcategory_id']) : null;
 
-        if (empty($name) || $categoryId === 0) {
+    public function create(array $data, int $userId): array
+    {
+        $name          = trim($data['name'] ?? '');
+        $description   = trim($data['description'] ?? '');
+        $isPublic      = isset($data['is_public']) ? (int)$data['is_public'] : 0;
+        $categoryId    = isset($data['category_id']) ? (int)$data['category_id'] : 0;
+        $subcategoryId = isset($data['subcategory_id']) ? (int)$data['subcategory_id'] : null;
+        $difficulty    = in_array($data['difficulty'] ?? '', ['Easy', 'Medium', 'Hard'])
+            ? $data['difficulty']
+            : 'Medium';
+
+        if ($name === '' || $categoryId === 0) {
             return ['status' => 400, 'message' => 'Quiz name and category are required'];
         }
 
-        $stmt = $this->conn->prepare("INSERT INTO user_quizzes (user_id, category_id, subcategory_id, name, description, is_public, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-        $stmt->bind_param("iiissi", $userId, $categoryId, $subcategoryId, $name, $description, $isPublic);
+        $stmt = $this->conn->prepare(
+            "INSERT INTO user_quizzes
+              (user_id, category_id, subcategory_id, difficulty,
+               name, description, is_public, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())"
+        );
+        $stmt->bind_param(
+            "iiisssi",
+            $userId,
+            $categoryId,
+            $subcategoryId,
+            $difficulty,
+            $name,
+            $description,
+            $isPublic
+        );
 
         if ($stmt->execute()) {
             $quizId = $stmt->insert_id;
@@ -43,223 +60,229 @@ class QuizController
         }
     }
 
-    public function getUserQuizzes($userId)
-    {
-        //prepare an SQL statement to fetch quizzes from the user_quizzes table
-        $stmt = $this->conn->prepare("SELECT id, name, description, is_public, created_at FROM user_quizzes WHERE user_id = ?");
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        //collect the results into an array
-        $quizzes = [];
-        while ($row = $result->fetch_assoc()) {
-            $quizzes[] = $row;
-        }
-        $stmt->close();
-
-        return ['status' => 200, 'quizzes' => $quizzes];
-    }
-
-    public function getPublicQuizzes()
+    
+    public function getUserQuizzes(int $userId): array
     {
         $quizModel = new Quiz($this->conn);
-        $quizzes = $quizModel->getPublicQuizzes();
+        $quizzes   = $quizModel->getUserQuizzes($userId);
+        return ['status' => 200, 'quizzes' => $quizzes];
+    }
+
+    
+    public function getPublicQuizzes(): array
+    {
+        $quizModel = new Quiz($this->conn);
+        $quizzes   = $quizModel->getPublicQuizzes();
 
         return ['status' => 200, 'quizzes' => $quizzes];
     }
 
-    //get quiz details for a given quiz id and user id.
-    public function getQuizById($quizId, $userId)
+   
+    public function getQuizById(int $quizId, ?int $userId = null): ?array
     {
         $sql = "
-            SELECT q.*, 
-                   c.name AS category_name, 
-                   s.name AS subcategory_name
+            SELECT
+              q.*, c.name AS category_name, s.name AS subcategory_name
             FROM user_quizzes q
             JOIN categories c ON q.category_id = c.id
             LEFT JOIN subcategories s ON q.subcategory_id = s.id
-            WHERE q.id = ? AND q.user_id = ?
-        ";
+            WHERE q.id = ? "
+            . ($userId !== null
+                ? "AND (q.is_public = 1 OR q.user_id = ?) "
+                : "AND q.is_public = 1 ")
+            . "LIMIT 1";
 
         $stmt = $this->conn->prepare($sql);
         if (!$stmt) {
             return null;
         }
-
-        $stmt->bind_param("ii", $quizId, $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result && $result->num_rows > 0) {
-            return $result->fetch_assoc();
-        }
-
-        return null;
-    }
-
-
-    //update quiz details.
-    public function edit($data, $userId)
-    {
-        if (empty($data['quiz_id']) || empty($data['name'])) {
-            return ['status' => 400, 'message' => 'Quiz id and name are required'];
-        }
-        $quizId = intval($data['quiz_id']);
-        $name = trim($data['name']);
-        $description = trim($data['description'] ?? '');
-        $isPublic = isset($data['is_public']) && $data['is_public'] ? 1 : 0;
-
-        $quizModel = new Quiz($this->conn);
-        $updated = $quizModel->update($quizId, $userId, $name, $description, $isPublic);
-        if ($updated) {
-            return ['status' => 200, 'message' => 'Quiz updated successfully'];
+        if ($userId !== null) {
+            $stmt->bind_param("ii", $quizId, $userId);
         } else {
-            return ['status' => 500, 'message' => 'Failed to update quiz'];
+            $stmt->bind_param("i", $quizId);
         }
-    }
-
-    public function getQuizQuestions($quizId, $userId = null)
-    {
-        //fetch the quiz details to determine privacy.
-        $stmt = $this->conn->prepare("SELECT user_id, is_public FROM user_quizzes WHERE id = ?");
-        $stmt->bind_param("i", $quizId);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $quiz = $result->fetch_assoc();
+        $quiz = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
-        if (!$quiz) {
-            return ['status' => 404, 'message' => 'Quiz not found'];
+        return $quiz ?: null;
+    }
+
+    public function edit(array $data, int $userId): array
+    {
+        $quizId      = isset($data['quiz_id']) ? (int)$data['quiz_id'] : 0;
+        $name        = trim($data['name'] ?? '');
+        $description = trim($data['description'] ?? '');
+        $isPublic    = !empty($data['is_public']) ? 1 : 0;
+        $difficulty  = in_array($data['difficulty'] ?? '', ['Easy', 'Medium', 'Hard'])
+            ? $data['difficulty']
+            : 'Medium';
+
+        if ($quizId === 0 || $name === '') {
+            return ['status' => 400, 'message' => 'Quiz id and name are required'];
         }
 
-        //if the quiz is private, only allow its creator to fetch questions.
-        if (!$quiz['is_public']) {
-            if (!$userId) {
-                return ['status' => 401, 'message' => 'Unauthorized: Private quiz'];
-            }
-            if ($quiz['user_id'] != $userId) {
-                return ['status' => 403, 'message' => 'Forbidden: You do not own this quiz'];
-            }
+        // Only update the fields the form actually sends
+        $stmt = $this->conn->prepare("
+        UPDATE user_quizzes
+           SET name        = ?,
+               description = ?,
+               is_public   = ?,
+               difficulty  = ?
+         WHERE id = ? AND user_id = ?
+    ");
+        $stmt->bind_param(
+            'ssisii',
+            $name,
+            $description,
+            $isPublic,
+            $difficulty,
+            $quizId,
+            $userId
+        );
+        if (! $stmt->execute() || $stmt->affected_rows === 0) {
+            $stmt->close();
+            return ['status' => 500, 'message' => 'Failed to update quiz'];
         }
+        $stmt->close();
 
+        $sync = $this->conn->prepare("
+        UPDATE questions q
+        JOIN user_quiz_questions uq ON uq.question_id = q.id
+           SET q.difficulty = ?
+         WHERE uq.quiz_id = ?
+    ");
+        $sync->bind_param("si", $difficulty, $quizId);
+        $sync->execute();
+        $sync->close();
+
+        return ['status' => 200, 'message' => 'Quiz updated successfully'];
+    }
+
+    //Fetch questions for a quiz, enforcing privacy.
+    public function getQuizQuestions(int $quizId, ?int $userId = null): array
+    {
+        // check quiz existence & privacy
         $stmt = $this->conn->prepare(
-            "SELECT q.id, q.question, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option
-         FROM questions q
-         JOIN user_quiz_questions uq ON q.id = uq.question_id
-         WHERE uq.quiz_id = ?"
+            "SELECT user_id, is_public, difficulty
+             FROM user_quizzes WHERE id = ?"
         );
         $stmt->bind_param("i", $quizId);
         $stmt->execute();
         $result = $stmt->get_result();
-        $questions = [];
-        while ($row = $result->fetch_assoc()) {
-            $questions[] = $row;
+        if ($result->num_rows === 0) {
+            return ['status' => 404, 'message' => 'Quiz not found'];
         }
-        $stmt->close();
-        return ['status' => 200, 'questions' => $questions];
-    }
-    public function deleteQuiz($quizId, $userId)
-    {
-        //verify the quiz belongs to the user.
-        $stmt = $this->conn->prepare("SELECT id FROM user_quizzes WHERE id = ? AND user_id = ?");
-        $stmt->bind_param("ii", $quizId, $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
         $quiz = $result->fetch_assoc();
         $stmt->close();
-        if (!$quiz) {
-            return ['status' => 404, 'message' => 'Quiz not found or not authorized'];
+
+        if (!$quiz['is_public']) {
+            if ($userId === null || $quiz['user_id'] != $userId) {
+                return ['status' => 403, 'message' => 'Unauthorized'];
+            }
         }
-        //delete the quiz.
-        $stmt = $this->conn->prepare("DELETE FROM user_quizzes WHERE id = ? AND user_id = ?");
+
+        $stmt = $this->conn->prepare(
+            "SELECT q.id, q.question, q.option_a, q.option_b, q.option_c,
+                    q.option_d, q.correct_option
+             FROM questions q
+             JOIN user_quiz_questions uq ON q.id = uq.question_id
+             WHERE uq.quiz_id = ?"
+        );
+        $stmt->bind_param("i", $quizId);
+        $stmt->execute();
+        $rows = $stmt->get_result();
+        $questions = [];
+        while ($r = $rows->fetch_assoc()) {
+            $questions[] = $r;
+        }
+        $stmt->close();
+
+        return ['status' => 200, 'questions' => $questions];
+    }
+
+    
+     //Delete a quiz owned by the user.
+     
+    public function deleteQuiz(int $quizId, int $userId): array
+    {
+        $stmt = $this->conn->prepare(
+            "DELETE FROM user_quizzes WHERE id = ? AND user_id = ?"
+        );
         $stmt->bind_param("ii", $quizId, $userId);
         if ($stmt->execute()) {
             $stmt->close();
             return ['status' => 200, 'message' => 'Quiz deleted successfully'];
-        } else {
-            $stmt->close();
-            return ['status' => 500, 'message' => 'Failed to delete quiz'];
         }
+        $stmt->close();
+        return ['status' => 500, 'message' => 'Failed to delete quiz'];
     }
 
-    public function deleteQuizQuestion($quizId, $questionId, $userId)
+    //Remove a question from a quiz.
+     
+    public function deleteQuizQuestion(int $quizId, int $questionId, int $userId): array
     {
-        //verify the quiz belongs to the user.
-        $stmt = $this->conn->prepare("SELECT id FROM user_quizzes WHERE id = ? AND user_id = ?");
+        // verify ownership
+        $stmt = $this->conn->prepare(
+            "SELECT id FROM user_quizzes WHERE id = ? AND user_id = ?"
+        );
         $stmt->bind_param("ii", $quizId, $userId);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $quiz = $result->fetch_assoc();
-        $stmt->close();
-        if (!$quiz) {
-            return ['status' => 404, 'message' => 'Quiz not found or not authorized'];
+        if ($stmt->get_result()->num_rows === 0) {
+            $stmt->close();
+            return ['status' => 404, 'message' => 'Quiz not found or unauthorized'];
         }
-        //remove the question link from the quiz.
-        $stmt = $this->conn->prepare("DELETE FROM user_quiz_questions WHERE quiz_id = ? AND question_id = ?");
+        $stmt->close();
+
+        $stmt = $this->conn->prepare(
+            "DELETE FROM user_quiz_questions WHERE quiz_id = ? AND question_id = ?"
+        );
         $stmt->bind_param("ii", $quizId, $questionId);
         if ($stmt->execute()) {
             $stmt->close();
-            return ['status' => 200, 'message' => 'Question deleted from quiz'];
-        } else {
-            $stmt->close();
-            return ['status' => 500, 'message' => 'Failed to delete question from quiz'];
+            return ['status' => 200, 'message' => 'Question removed from quiz'];
         }
+        $stmt->close();
+        return ['status' => 500, 'message' => 'Failed to remove question from quiz'];
     }
 
-    public function updateQuizQuestion($quizId, $questionId, $userId, $updatedQuestion)
+    
+    //Update a question within a quiz.
+
+    public function updateQuizQuestion(int $quizId, int $questionId, int $userId, array $updatedQuestion): array
     {
-        //confirm the quiz belongs to the user
-        $stmt = $this->conn->prepare("SELECT id FROM user_quizzes WHERE id = ? AND user_id = ?");
-        $stmt->bind_param("ii", $quizId, $userId);
+        // verify ownership & link
+        $stmt = $this->conn->prepare(
+            "SELECT uq.question_id FROM user_quizzes uqz
+             JOIN user_quiz_questions uq ON uq.quiz_id = uqz.id
+             WHERE uqz.id = ? AND uqz.user_id = ? AND uq.question_id = ? LIMIT 1"
+        );
+        $stmt->bind_param("iii", $quizId, $userId, $questionId);
         $stmt->execute();
-        $result = $stmt->get_result();
-        $quiz = $result->fetch_assoc();
+        if ($stmt->get_result()->num_rows === 0) {
+            $stmt->close();
+            return ['status' => 404, 'message' => 'Quiz or question not found or unauthorized'];
+        }
         $stmt->close();
 
-        if (!$quiz) {
-            return ['status' => 404, 'message' => 'Quiz not found or not authorized'];
+        // validate correct_option
+        $opt = strtoupper(trim($updatedQuestion['correct_option'] ?? ''));
+        if (!in_array($opt, ['A', 'B', 'C', 'D'])) {
+            return ['status' => 400, 'message' => 'Invalid correct option'];
         }
 
-        //confirm the question is linked to this quiz (so the user can only edit questions in their quiz)
-        $stmt = $this->conn->prepare("
-        SELECT question_id 
-        FROM user_quiz_questions 
-        WHERE quiz_id = ? AND question_id = ? 
-        LIMIT 1
-    ");
-        $stmt->bind_param("ii", $quizId, $questionId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $questionLink = $result->fetch_assoc();
-        $stmt->close();
-
-        if (!$questionLink) {
-            return ['status' => 404, 'message' => 'Question not found in this quiz'];
-        }
-
-        //validate the correct_option
-        $validOptions = ['A', 'B', 'C', 'D', 'a', 'b', 'c', 'd'];
-        if (!in_array($updatedQuestion['correct_option'], $validOptions)) {
-            return ['status' => 400, 'message' => 'Invalid correct option. Must be A, B, C, or D'];
-        }
-
-        //update the question row in the questions table
-        $stmt = $this->conn->prepare("
-        UPDATE questions q
-        INNER JOIN user_quiz_questions uq ON q.id = uq.question_id
-        SET q.question = ?,
-            q.option_a = ?,
-            q.option_b = ?,
-            q.option_c = ?,
-            q.option_d = ?,
-            q.correct_option = ?
-        WHERE uq.quiz_id = ? AND uq.question_id = ?
-    ");
-        if (!$stmt) {
-            return ['status' => 500, 'message' => 'Failed to prepare statement'];
-        }
-        $correctOption = strtoupper($updatedQuestion['correct_option']);
+        // update question
+        $stmt = $this->conn->prepare(
+            "UPDATE questions q
+             JOIN user_quiz_questions uq ON uq.question_id = q.id
+             SET q.question       = ?,
+                 q.option_a       = ?,
+                 q.option_b       = ?,
+                 q.option_c       = ?,
+                 q.option_d       = ?,
+                 q.correct_option = ?
+             WHERE uq.quiz_id = ? AND uq.question_id = ?"
+        );
         $stmt->bind_param(
             "ssssssii",
             $updatedQuestion['question'],
@@ -267,17 +290,16 @@ class QuizController
             $updatedQuestion['option_b'],
             $updatedQuestion['option_c'],
             $updatedQuestion['option_d'],
-            $correctOption,
+            $opt,
             $quizId,
             $questionId
         );
-        $success = $stmt->execute();
+        $ok = $stmt->execute();
         $stmt->close();
 
-        if (!$success) {
+        if (!$ok) {
             return ['status' => 500, 'message' => 'Failed to update question'];
         }
-
         return ['status' => 200, 'message' => 'Question updated successfully'];
     }
 }

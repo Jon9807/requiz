@@ -1,42 +1,35 @@
-/* Make the container a flex row with space-between */
 .navbar .container-fluid {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* Brand stays at left */
 .navbar-brand {
   flex: 0 0 auto;
   margin-right: 1rem;
 }
 
-/* Centered nav items */
 .navbar-nav.mx-auto {
   flex: 1 1 auto;
   display: flex;
   justify-content: center;
 }
 
-/* Right-aligned items (login/avatar) */
 .navbar-nav.ms-auto {
   flex: 0 0 auto;
 }
 
-/* Base link styling */
 .navbar-nav .nav-link {
   position: relative;
   padding: 0.5rem 1rem;
   transition: color 0.2s ease;
 }
 
-/* Hover state glow */
 .navbar-nav .nav-link:hover {
   color: #ff2674;
   text-shadow: 0 0 6px rgba(255, 38, 126, 0.8);
 }
 
-/* Active link underline gradient */
 .navbar-nav .nav-link.active {
   color: #fff;
 }
@@ -52,7 +45,6 @@
   border-radius: 2px;
 }
 
-/* Tweak the toggler icon to stay on right */
 .navbar-toggler {
   margin-left: auto;
 }
@@ -60,13 +52,12 @@
 
 
 
-/* src/styles/Profile.css */
 
 .profile-page {
   display: flex;
   justify-content: center;
   padding: 2rem 1rem;
-  min-height: calc(100vh - 80px); /* adjust if your header height differs */
+  min-height: calc(100vh - 80px); 
 }
 
 .profile-card {
@@ -74,7 +65,6 @@
   max-width: 500px;
   padding: 2rem;
   border-radius: 1rem;
-  /* glass-panel styling should already be in your global CSS */
 }
 
 .profile-title {
@@ -83,12 +73,10 @@
   color: #fff;
 }
 
-/* Avatar wrapper to center it */
 .avatar-wrapper {
   margin-bottom: 1.5rem;
 }
 
-/* Both real img and placeholder share size/shape */
 .avatar-img,
 .avatar-placeholder {
   width: 140px;
@@ -100,13 +88,11 @@
   margin: 0 auto;
 }
 
-/* Uploaded image styling */
 .avatar-img {
   object-fit: cover;
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Question-mark placeholder styling */
 .avatar-placeholder {
   background: transparent;
   color: #fff;
@@ -116,7 +102,6 @@
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Form layout */
 .profile-form label {
   display: block;
   margin-top: 1rem;
@@ -142,7 +127,6 @@
   color: #fff;
 }
 
-/* Buttons container */
 .form-buttons {
   display: flex;
   justify-content: space-between;

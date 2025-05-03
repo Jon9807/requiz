@@ -1,7 +1,7 @@
 //CreateQuiz.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE } from "../config"; // adjust if your path is different
+import { API_BASE } from "../config";
 
 const CreateQuiz = () => {
   const [quizName, setQuizName] = useState("");
@@ -12,6 +12,7 @@ const CreateQuiz = () => {
   const [subcategories, setSubcategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [difficulty, setDifficulty] = useState("Medium");
 
   const navigate = useNavigate();
 
@@ -48,6 +49,7 @@ const CreateQuiz = () => {
           subcategory_id: selectedSubcategory
             ? parseInt(selectedSubcategory)
             : null,
+          difficulty,
         }),
       });
       const data = await response.json();
@@ -134,6 +136,22 @@ const CreateQuiz = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="difficulty" className="form-label">
+              Difficulty
+            </label>
+            <select
+              id="difficulty"
+              className="form-control form-control-sm"
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+              required
+            >
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
           </div>
 
           <div className="form-check mb-3">

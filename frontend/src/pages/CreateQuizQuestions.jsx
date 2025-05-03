@@ -18,7 +18,7 @@ const CreateQuizQuestions = () => {
   const [quizInfo, setQuizInfo] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
   const [message, setMessage] = useState("");
-  const [visible, setVisible] = useState(false); // for animation
+  const [visible, setVisible] = useState(false); 
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -79,7 +79,7 @@ const CreateQuizQuestions = () => {
       }
 
       setTimeout(() => setVisible(false), 2500);
-      setTimeout(() => setMessage(""), 3500); // let it fade first
+      setTimeout(() => setMessage(""), 3500); 
     } catch (err) {
       setMessage("Error: " + err.message);
       setVisible(true);

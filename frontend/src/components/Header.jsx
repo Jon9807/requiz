@@ -1,4 +1,4 @@
-//header.jsx
+//components/Header.jsx
 import Navbar from "./Navbar";
 
 const Header = () => {

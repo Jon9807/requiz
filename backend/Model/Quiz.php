@@ -14,10 +14,22 @@ class Quiz
     }
 
     //create a new quiz.
-    public function create($userId, $name, $description, $isPublic)
+    public function create($userId, $categoryId, $subcategoryId, $name, $description, $isPublic)
     {
-        $stmt = $this->conn->prepare("INSERT INTO user_quizzes (user_id, name, description, is_public, created_at) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->bind_param("issi", $userId, $name, $description, $isPublic);
+        $stmt = $this->conn->prepare("
+          INSERT INTO user_quizzes
+            (user_id, category_id, subcategory_id, name, description, is_public, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, NOW())
+        ");
+        $stmt->bind_param(
+            "iiissi",
+            $userId,
+            $categoryId,
+            $subcategoryId,
+            $name,
+            $description,
+            $isPublic
+        );
         $result = $stmt->execute();
         if ($result) {
             $quizId = $stmt->insert_id;
@@ -28,15 +40,51 @@ class Quiz
             return false;
         }
     }
+    public function getUserQuizzes(int $userId): array
+    {
+        $stmt = $this->conn->prepare("
+            SELECT
+              id,
+              name,
+              description,
+              difficulty,
+              is_public,
+              created_at
+            FROM user_quizzes
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        ");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $quizzes = [];
+        while ($row = $result->fetch_assoc()) {
+            $quizzes[] = $row;
+        }
+        $stmt->close();
+
+        return $quizzes;
+    }
+
 
     //fetch public quizzes
     public function getPublicQuizzes()
     {
-        $stmt = $this->conn->prepare("SELECT q.id, q.name, q.description, q.is_public, q.created_at, u.username AS creator
+        $stmt = $this->conn->prepare("
+            SELECT
+              q.id,
+              q.name,
+              q.description,
+              q.difficulty,
+              q.is_public,
+              q.created_at,
+              u.username AS creator
             FROM user_quizzes q
             JOIN users u ON q.user_id = u.id
             WHERE q.is_public = 1
-            ORDER BY q.created_at DESC");
+            ORDER BY q.created_at DESC
+        ");
         $stmt->execute();
         $result = $stmt->get_result();
 

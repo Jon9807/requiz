@@ -26,7 +26,10 @@ const QuizPlay = () => {
     if (typeof data === "string") {
       let text = data.trim();
       if (text.startsWith("```")) {
-        text = text.replace(/^```.*\n?/, "").replace(/```$/, "").trim();
+        text = text
+          .replace(/^```.*\n?/, "")
+          .replace(/```$/, "")
+          .trim();
       }
       try {
         data = JSON.parse(text);
@@ -85,7 +88,7 @@ const QuizPlay = () => {
           </p>
           <div className="d-flex justify-content-center">
             <button
-              className="btn btn-secondary"
+              className="btn btn-outline-primary"
               onClick={() => navigate(backTo)}
             >
               ← Back

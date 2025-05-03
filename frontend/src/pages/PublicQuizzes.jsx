@@ -1,7 +1,7 @@
 // src/pages/PublicQuizzes.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { API_BASE } from "../config"; // update path if needed
+import { API_BASE } from "../config"; 
 
 const PublicQuizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -62,6 +62,9 @@ const PublicQuizzes = () => {
               <div className="card-body">
                 <h5 className="card-title">{quiz.name}</h5>
                 <p className="card-text">{quiz.description}</p>
+                <p className="card-text">
+                    Difficulty: <strong>{quiz.difficulty}</strong>
+                  </p>
                 <p className="card-text">
                   <small>By: {quiz.creator}</small>
                 </p>

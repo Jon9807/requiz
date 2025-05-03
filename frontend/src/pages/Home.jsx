@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { API_BASE } from "../config"; // ✅ new line
+import { API_BASE } from "../config"; 
 
 
 const Home = () => {

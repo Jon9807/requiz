@@ -18,16 +18,7 @@ class OpenAIController {
             'read_timeout'    => 50.0,   // response read timeout
         ]);
     }
-
-    /**
-     * Generate a quiz using the OpenAI chat completions endpoint.
-     *
-     * @param string $category     The quiz category.
-     * @param string $difficulty   The difficulty level.
-     * @param int    $numQuestions The number of questions.
-     * @return array Returns an array with status and quiz content (as PHP array) or error.
-     */
-    public function generateQuiz($category, $difficulty, $numQuestions) {
+    public function generateQuiz(string $category, string $difficulty, int $numQuestions): array {
         $prompt = "Generate a quiz in valid JSON format. Do NOT include any markdown formatting. "
                 . "Return an array with exactly {$numQuestions} question objects. Each object must have the keys: "
                 . "'question' (string), 'options' (an array of 4 strings), and 'answer' (string). "

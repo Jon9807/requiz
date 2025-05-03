@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { API_BASE } from "../config"; // adjust path if needed
+import { API_BASE } from "../config";
 
 const ConfirmDialog = ({ show, title, message, onConfirm, onCancel }) => {
   if (!show) return null;
@@ -47,6 +47,7 @@ const EditQuiz = () => {
     name: "",
     description: "",
     is_public: false,
+    difficulty: "Medium",
   });
   const [quizMessage, setQuizMessage] = useState("");
   const [questionMessage, setQuestionMessage] = useState("");
@@ -71,62 +72,19 @@ const EditQuiz = () => {
   const [confirmDeleteQuiz, setConfirmDeleteQuiz] = useState(false);
   const [confirmDeleteQuestionId, setConfirmDeleteQuestionId] = useState(null);
 
-  // auto-clear quizMessage after 3s
+  // auto-clear messages
   useEffect(() => {
     if (!quizMessage) return;
-    const timer = setTimeout(() => setQuizMessage(""), 3000);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setQuizMessage(""), 3000);
+    return () => clearTimeout(t);
   }, [quizMessage]);
 
-  // auto-clear questionMessage after 3s
   useEffect(() => {
     if (!questionMessage) return;
-    const timer = setTimeout(() => setQuestionMessage(""), 3000);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setQuestionMessage(""), 3000);
+    return () => clearTimeout(t);
   }, [questionMessage]);
 
-  // Load quiz details
-  useEffect(() => {
-    if (!token) return navigate("/auth");
-    fetch(`${API_BASE}?action=get_quiz_details&quiz_id=${quizId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.message) {
-          setQuizMessage(data.message);
-        } else {
-          setQuiz({
-            name: data.name,
-            description: data.description,
-            is_public: data.is_public === 1,
-          });
-        }
-      })
-      .catch((err) => setQuizMessage("Error: " + err.message));
-  }, [quizId, token, navigate]);
-
-  // Load quiz questions
-  useEffect(() => {
-    fetch(`${API_BASE}?action=get_quiz_questions&quiz_id=${quizId}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.questions) {
-          setQuizQuestions(data.questions);
-        }
-      })
-      .catch((err) => console.error("Error fetching quiz questions:", err));
-  }, [quizId, token]);
-
-  // Handler for quiz form inputs
   const handleQuizChange = (e) => {
     const { name, value, type, checked } = e.target;
     setQuiz((prev) => ({
@@ -135,6 +93,47 @@ const EditQuiz = () => {
     }));
   };
 
+  // load quiz details
+  useEffect(() => {
+    if (!token) return navigate("/auth");
+    fetch(`${API_BASE}?action=get_quiz_details&quiz_id=${quizId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.message) {
+          setQuizMessage(data.message);
+        } else {
+          setQuiz({
+            name: data.name,
+            description: data.description,
+            is_public: data.is_public === 1,
+            difficulty: data.difficulty || "Medium",
+          });
+        }
+      })
+      .catch((err) => setQuizMessage("Error: " + err.message));
+  }, [quizId, token, navigate]);
+
+  // load questions
+  useEffect(() => {
+    fetch(`${API_BASE}?action=get_quiz_questions&quiz_id=${quizId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.questions) setQuizQuestions(data.questions);
+      })
+      .catch((err) => console.error("Fetch questions error:", err));
+  }, [quizId, token]);
+
+  // submit edited quiz
   const handleQuizSubmit = (e) => {
     e.preventDefault();
     const payload = {
@@ -142,6 +141,7 @@ const EditQuiz = () => {
       name: quiz.name,
       description: quiz.description,
       is_public: quiz.is_public ? 1 : 0,
+      difficulty: quiz.difficulty,
     };
     fetch(`${API_BASE}?action=edit_quiz`, {
       method: "POST",
@@ -151,19 +151,24 @@ const EditQuiz = () => {
       },
       body: JSON.stringify(payload),
     })
-      .then((res) => res.json())
-      .then((data) => {
-        // catch both “fail to update quiz” and “failed to update quiz”
-        let msg = data.message;
-        if (/fail(ed)? to update quiz/i.test(msg)) {
-          msg = "Up to date";
+      .then(async (res) => {
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          console.error("Server HTML/error:", text);
+          throw new Error("Server error – check console");
         }
+      })
+      .then((data) => {
+        let msg = data.message;
+        if (/fail(ed)? to update quiz/i.test(msg)) msg = "Up to date";
         setQuizMessage(msg);
       })
       .catch((err) => setQuizMessage("Error: " + err.message));
   };
-  
 
+  // delete quiz
   const handleDeleteQuiz = () => setConfirmDeleteQuiz(true);
   const doDeleteQuiz = () => {
     setConfirmDeleteQuiz(false);
@@ -175,7 +180,7 @@ const EditQuiz = () => {
       },
       body: JSON.stringify({ quiz_id: quizId }),
     })
-      .then((res) => res.json())
+      .then((r) => r.json())
       .then((data) => {
         setQuizMessage(data.message);
         if (data.status === 200) navigate("/user-quizzes");
@@ -183,12 +188,11 @@ const EditQuiz = () => {
       .catch((err) => setQuizMessage("Error: " + err.message));
   };
 
-  // New question handlers
+  // add new question
   const handleNewQuestionChange = (e) => {
     const { name, value } = e.target;
     setNewQuestionForm((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleNewQuestionSubmit = (e) => {
     e.preventDefault();
     const payload = { quiz_id: quizId, ...newQuestionForm };
@@ -200,17 +204,13 @@ const EditQuiz = () => {
       },
       body: JSON.stringify(payload),
     })
-      .then((res) => res.json())
+      .then((r) => r.json())
       .then((data) => {
         setQuestionMessage(data.message);
         if (data.question_id) {
           setQuizQuestions((prev) => [
             ...prev,
-            {
-              id: data.question_id,
-              ...newQuestionForm,
-              correct_option: newQuestionForm.correct_option.toUpperCase(),
-            },
+            { id: data.question_id, ...newQuestionForm, correct_option: newQuestionForm.correct_option.toUpperCase() },
           ]);
           setNewQuestionForm({
             question: "",
@@ -225,7 +225,7 @@ const EditQuiz = () => {
       .catch((err) => setQuestionMessage("Error: " + err.message));
   };
 
-  // Delete question
+  // delete question
   const handleDeleteQuestion = (id) => setConfirmDeleteQuestionId(id);
   const doDeleteQuestion = () => {
     const id = confirmDeleteQuestionId;
@@ -238,7 +238,7 @@ const EditQuiz = () => {
       },
       body: JSON.stringify({ quiz_id: quizId, question_id: id }),
     })
-      .then((res) => res.json())
+      .then((r) => r.json())
       .then((data) => {
         setQuestionMessage(data.message);
         setQuizQuestions((prev) => prev.filter((q) => q.id !== id));
@@ -246,7 +246,7 @@ const EditQuiz = () => {
       .catch((err) => setQuestionMessage("Error: " + err.message));
   };
 
-  // Inline edit question
+  // inline edit question
   const handleEditQuestion = (q) => {
     setEditingQuestionId(q.id);
     setEditQuestionForm({
@@ -263,11 +263,7 @@ const EditQuiz = () => {
     setEditQuestionForm((prev) => ({ ...prev, [name]: value }));
   };
   const handleEditSave = (questionId) => {
-    const payload = {
-      quiz_id: quizId,
-      question_id: questionId,
-      ...editQuestionForm,
-    };
+    const payload = { quiz_id: quizId, question_id: questionId, ...editQuestionForm };
     fetch(`${API_BASE}?action=update_quiz_question`, {
       method: "POST",
       headers: {
@@ -276,18 +272,13 @@ const EditQuiz = () => {
       },
       body: JSON.stringify(payload),
     })
-      .then((res) => res.json())
+      .then((r) => r.json())
       .then((data) => {
         if (data.status === 200) {
           setQuizQuestions((prev) =>
             prev.map((q) =>
               q.id === questionId
-                ? {
-                    ...q,
-                    ...editQuestionForm,
-                    correct_option:
-                      editQuestionForm.correct_option.toUpperCase(),
-                  }
+                ? { ...q, ...editQuestionForm, correct_option: editQuestionForm.correct_option.toUpperCase() }
                 : q
             )
           );
@@ -304,17 +295,12 @@ const EditQuiz = () => {
     <div className="container mt-5 d-flex justify-content-center">
       <div className="form-wrapper w-100" style={{ maxWidth: "600px" }}>
         <h2 className="mb-4">Edit Quiz</h2>
+        {quizMessage && <p className="text-success text-center">{quizMessage}</p>}
 
-        {quizMessage && (
-          <p className="text-success text-center">{quizMessage}</p>
-        )}
-
-        {/* Quiz Details */}
+        {/* Quiz Details Form */}
         <form onSubmit={handleQuizSubmit}>
           <div className="mb-3">
-            <label htmlFor="quizName" className="form-label">
-              Quiz Name
-            </label>
+            <label htmlFor="quizName" className="form-label">Quiz Name</label>
             <input
               id="quizName"
               name="name"
@@ -326,9 +312,7 @@ const EditQuiz = () => {
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="quizDescription" className="form-label">
-              Description
-            </label>
+            <label htmlFor="quizDescription" className="form-label">Description</label>
             <textarea
               id="quizDescription"
               name="description"
@@ -337,6 +321,21 @@ const EditQuiz = () => {
               value={quiz.description}
               onChange={handleQuizChange}
             />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="difficulty" className="form-label">Difficulty</label>
+            <select
+              id="difficulty"
+              name="difficulty"
+              className="form-control form-control-sm"
+              value={quiz.difficulty}
+              onChange={handleQuizChange}
+              required
+            >
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
           </div>
           <div className="form-check mb-3">
             <input
@@ -365,10 +364,9 @@ const EditQuiz = () => {
           </div>
         </form>
 
+        {/* Add New Question */}
         <h3 className="mb-3">Add a New Question</h3>
-        {questionMessage && (
-          <p className="text-success text-center">{questionMessage}</p>
-        )}
+        {questionMessage && <p className="text-success text-center">{questionMessage}</p>}
         <form onSubmit={handleNewQuestionSubmit}>
           <div className="mb-3">
             <label className="form-label">Question</label>
@@ -383,9 +381,7 @@ const EditQuiz = () => {
           </div>
           {["option_a", "option_b", "option_c", "option_d"].map((opt, i) => (
             <div className="mb-3" key={opt}>
-              <label className="form-label">
-                Option {String.fromCharCode(65 + i)}
-              </label>
+              <label className="form-label">Option {String.fromCharCode(65 + i)}</label>
               <input
                 name={opt}
                 className="form-control form-control-sm"
@@ -410,16 +406,14 @@ const EditQuiz = () => {
           </div>
         </form>
 
+        {/* Quiz Questions List */}
         <h3>Quiz Questions</h3>
         <ul className="list-group">
           {quizQuestions.map((q) => (
-            <li
-              key={q.id}
-              className="list-group-item mb-3 question-card text-light"
-            >
+            <li key={q.id} className="list-group-item mb-3 bg-dark text-light">
               {editingQuestionId === q.id ? (
                 <>
-                  {/* edit form */}
+                  {/* Edit Form */}
                   <div className="mb-2">
                     <label className="form-label">Question</label>
                     <textarea
@@ -430,21 +424,17 @@ const EditQuiz = () => {
                       onChange={handleEditChange}
                     />
                   </div>
-                  {["option_a", "option_b", "option_c", "option_d"].map(
-                    (opt, i) => (
-                      <div className="mb-2" key={opt}>
-                        <label className="form-label">
-                          Option {String.fromCharCode(65 + i)}
-                        </label>
-                        <input
-                          name={opt}
-                          className="form-control form-control-sm"
-                          value={editQuestionForm[opt]}
-                          onChange={handleEditChange}
-                        />
-                      </div>
-                    )
-                  )}
+                  {["option_a", "option_b", "option_c", "option_d"].map((opt, i) => (
+                    <div className="mb-2" key={opt}>
+                      <label className="form-label">Option {String.fromCharCode(65 + i)}</label>
+                      <input
+                        name={opt}
+                        className="form-control form-control-sm"
+                        value={editQuestionForm[opt]}
+                        onChange={handleEditChange}
+                      />
+                    </div>
+                  ))}
                   <div className="mb-3">
                     <label className="form-label">Correct Option</label>
                     <input
@@ -471,17 +461,11 @@ const EditQuiz = () => {
                 </>
               ) : (
                 <>
-                  <p>
-                    <strong>Question:</strong> {q.question}
-                  </p>
+                  <p><strong>Question:</strong> {q.question}</p>
                   {["A", "B", "C", "D"].map((l) => (
-                    <p key={l}>
-                      <strong>{l}:</strong> {q[`option_${l.toLowerCase()}`]}
-                    </p>
+                    <p key={l}><strong>{l}:</strong> {q[`option_${l.toLowerCase()}`]}</p>
                   ))}
-                  <p>
-                    <strong>Correct:</strong> {q.correct_option}
-                  </p>
+                  <p><strong>Correct:</strong> {q.correct_option}</p>
                   <div className="d-flex gap-2">
                     <button
                       className="btn btn-sm btn-outline-warning"
@@ -501,22 +485,23 @@ const EditQuiz = () => {
             </li>
           ))}
         </ul>
-      </div>
 
-      {/* Confirm Dialogs */}
-      <ConfirmDialog
-        show={confirmDeleteQuiz}
-        title="Delete this quiz?"
-        message="This cannot be undone."
-        onConfirm={doDeleteQuiz}
-        onCancel={() => setConfirmDeleteQuiz(false)}
-      />
-      <ConfirmDialog
-        show={confirmDeleteQuestionId != null}
-        title="Delete this question?"
-        onConfirm={doDeleteQuestion}
-        onCancel={() => setConfirmDeleteQuestionId(null)}
-      />
+        {/* Confirm Dialogs */}
+        <ConfirmDialog
+          show={confirmDeleteQuiz}
+          title="Delete this quiz?"
+          message="This cannot be undone."
+          onConfirm={doDeleteQuiz}
+          onCancel={() => setConfirmDeleteQuiz(false)}
+        />
+        <ConfirmDialog
+          show={confirmDeleteQuestionId != null}
+          title="Delete this question?"
+          message=""
+          onConfirm={doDeleteQuestion}
+          onCancel={() => setConfirmDeleteQuestionId(null)}
+        />
+      </div>
     </div>
   );
 };

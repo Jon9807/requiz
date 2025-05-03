@@ -1,3 +1,5 @@
+//components/Footer,js
+
 import React from "react";
 import { Mail, Facebook, Instagram } from "lucide-react";
 import "../styles/Footer.css";

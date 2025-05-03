@@ -32,7 +32,7 @@ const UserQuizzes = () => {
         return response.json();
       })
       .then((data) => {
-        setQuizzes(data.quizzes || []); // always set something
+        setQuizzes(data.quizzes || []); 
       })
       .catch((err) => {
         console.error("Fetch user quizzes failed:", err);
@@ -53,6 +53,12 @@ const UserQuizzes = () => {
               <div className="card bg-dark text-light h-100">
                 <div className="card-body d-flex flex-column">
                   <h5 className="card-title">{quiz.name}</h5>
+                  
+                  <p className="card-text">{quiz.description}</p>
+                  <p className="card-text">
+                    Difficulty: <strong>{quiz.difficulty}</strong>
+                  </p>
+
                   <p className="card-text">
                     Status: {quiz.is_public ? "Public" : "Private"}
                   </p>

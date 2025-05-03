@@ -72,7 +72,6 @@ $requiresAuth = in_array($action, [
     'delete_quiz',
     'admin_delete_quiz',
     'update_quiz',
-    'admin_create_quiz',
     'get_all_users',
     'delete_user',
     'update_user',
@@ -81,8 +80,6 @@ $requiresAuth = in_array($action, [
     'delete_session',
     'remove_profile_pic'
 ]);
-
-
 
 
 $userId = null;
@@ -374,7 +371,7 @@ elseif ($action === 'save_session') {
     $email        = isset($data['email'])        ? trim($data['email'])        : null;
     $bio          = isset($data['bio'])          ? trim($data['bio'])          : null;
 
-    // now update username, display_name, email, bio, and profile_pic
+    //update username, display_name, email, bio, and profile_pic
     $stmt = $conn->prepare("
         UPDATE users
         SET
@@ -403,7 +400,7 @@ elseif ($action === 'save_session') {
         Response::json(["message" => "Failed to update profile"], 500);
     }
 } elseif ($action === 'search_public_quizzes') {
-    // Get the search term from the query string
+    //get the search term from the query string
     $q = isset($_GET['q']) ? trim($_GET['q']) : "";
     $searchTerm = "%" . $q . "%";
 
@@ -423,7 +420,7 @@ elseif ($action === 'save_session') {
     $stmt->close();
     \View\Response::json(["quizzes" => $quizzes], 200);
 }
-// List subcategories for a given category
+//list subcategories for a given category
 elseif ($action === 'get_subcategories') {
     $catId = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
     if ($catId > 0) {
@@ -645,8 +642,7 @@ elseif ($action === 'get_admin_stats') {
 
         //delete all those questions in one go
         if (!empty($questionIds)) {
-            //build a placeholder string like "?, ?, ?"
-            $placeholders = implode(",", array_fill(0, count($questionIds), "?"));
+           $placeholders = implode(",", array_fill(0, count($questionIds), "?"));
             $types        = str_repeat("i", count($questionIds));
             $sql          = "DELETE FROM questions WHERE id IN ($placeholders)";
             $delStmt      = $conn->prepare($sql);
@@ -685,30 +681,7 @@ elseif ($action === 'get_admin_stats') {
         $stmt->close();
         \View\Response::json(["message" => "Failed to update quiz"], 500);
     }
-} elseif ($action === 'admin_create_quiz') {
-    require_once 'Model/User.php';
-    $userModel = new \Model\User($conn);
-    $adminUser = $userModel->getById($userId);
-    if (!$adminUser || $adminUser['role'] !== 'admin') {
-        \View\Response::json(["message" => "Forbidden: Admins only"], 403);
-    }
-    $data = json_decode(file_get_contents("php://input"), true);
-    $name = isset($data['name']) ? trim($data['name']) : "";
-    $description = isset($data['description']) ? trim($data['description']) : "";
-    $isPublic = isset($data['is_public']) ? intval($data['is_public']) : 1;
-    if (empty($name)) {
-        \View\Response::json(["message" => "Quiz name is required"], 400);
-    }
-    $stmt = $conn->prepare("INSERT INTO user_quizzes (user_id, name, description, is_public, created_at) VALUES (?, ?, ?, ?, NOW())");
-    $stmt->bind_param("issi", $userId, $name, $description, $isPublic);
-    if ($stmt->execute()) {
-        $quizId = $stmt->insert_id;
-        $stmt->close();
-        \View\Response::json(["message" => "Quiz created successfully", "quiz_id" => $quizId], 201);
-    } else {
-        $stmt->close();
-        \View\Response::json(["message" => "Failed to create quiz"], 500);
-    }
+
 } elseif ($action === 'get_all_users') {
     require_once 'Model/User.php';
     $userModel = new \Model\User($conn);
