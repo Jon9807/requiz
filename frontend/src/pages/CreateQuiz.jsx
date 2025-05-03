@@ -1,7 +1,7 @@
 //CreateQuiz.jsx
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../config"; // adjust if your path is different
 
 const CreateQuiz = () => {
   const [quizName, setQuizName] = useState("");
@@ -16,14 +16,16 @@ const CreateQuiz = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost/re-quiz-app/backend/index.php?action=get_categories")
+    fetch(`${API_BASE}?action=get_categories`)
       .then((res) => res.json())
       .then((data) => setCategories(data.categories));
   }, []);
 
   useEffect(() => {
     if (!selectedCategory) return;
-    fetch(`http://localhost/re-quiz-app/backend/index.php?action=get_subcategories&category_id=${selectedCategory}`)
+    fetch(
+      `${API_BASE}?action=get_subcategories&category_id=${selectedCategory}`
+    )
       .then((res) => res.json())
       .then((data) => setSubcategories(data.subcategories));
   }, [selectedCategory]);
@@ -32,23 +34,22 @@ const CreateQuiz = () => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(
-        "http://localhost/re-quiz-app/backend/index.php?action=create_quiz",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: quizName,
-            description,
-            is_public: isPublic ? 1 : 0,
-            category_id: parseInt(selectedCategory),
-            subcategory_id: selectedSubcategory ? parseInt(selectedSubcategory) : null,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE}?action=create_quiz`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: quizName,
+          description,
+          is_public: isPublic ? 1 : 0,
+          category_id: parseInt(selectedCategory),
+          subcategory_id: selectedSubcategory
+            ? parseInt(selectedSubcategory)
+            : null,
+        }),
+      });
       const data = await response.json();
       setMessage(data.message);
       if (response.ok && data.quiz_id) {
@@ -90,7 +91,9 @@ const CreateQuiz = () => {
 
           {selectedCategory && (
             <div className="mb-3">
-              <label className="form-label">Default Subcategory (optional)</label>
+              <label className="form-label">
+                Default Subcategory (optional)
+              </label>
               <select
                 className="form-control form-control-sm"
                 value={selectedSubcategory}
@@ -107,7 +110,9 @@ const CreateQuiz = () => {
           )}
 
           <div className="mb-3">
-            <label htmlFor="quizName" className="form-label">Quiz Name</label>
+            <label htmlFor="quizName" className="form-label">
+              Quiz Name
+            </label>
             <input
               type="text"
               id="quizName"
@@ -119,7 +124,9 @@ const CreateQuiz = () => {
           </div>
 
           <div className="mb-3">
-            <label htmlFor="quizDescription" className="form-label">Description</label>
+            <label htmlFor="quizDescription" className="form-label">
+              Description
+            </label>
             <textarea
               id="quizDescription"
               className="form-control form-control-sm"

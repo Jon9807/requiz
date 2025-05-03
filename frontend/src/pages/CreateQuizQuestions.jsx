@@ -1,6 +1,7 @@
-//CreateQuizQuestions.jsx
+// src/pages/CreateQuizQuestions.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { API_BASE } from "../config";
 
 const CreateQuizQuestions = () => {
   const { quizId } = useParams();
@@ -17,25 +18,21 @@ const CreateQuizQuestions = () => {
   const [quizInfo, setQuizInfo] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
   const [message, setMessage] = useState("");
+  const [visible, setVisible] = useState(false); // for animation
 
-  // Fetch quiz details on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(
-      `http://localhost/re-quiz-app/backend/index.php?action=get_quiz_details&quiz_id=${quizId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    fetch(`${API_BASE}?action=get_quiz_details&quiz_id=${quizId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data && data.name) {
           setQuizInfo(data);
-          //fetch subcategories if needed
           fetch(
-            `http://localhost/re-quiz-app/backend/index.php?action=get_subcategories&category_id=${data.category_id}`
+            `${API_BASE}?action=get_subcategories&category_id=${data.category_id}`
           )
             .then((r) => r.json())
             .then((result) => setSubcategories(result.subcategories || []));
@@ -43,9 +40,7 @@ const CreateQuizQuestions = () => {
       });
   }, [quizId]);
 
-  //clear the message whenever any field changes
   const handleChange = (e) => {
-    if (message) setMessage("");
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -53,25 +48,24 @@ const CreateQuizQuestions = () => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(
-        "http://localhost/re-quiz-app/backend/index.php?action=create_quiz_question",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            quiz_id: quizId,
-            ...form,
-            subcategory_id:
-              quizInfo?.subcategory_id || form.subcategory_id || null,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}?action=create_quiz_question`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          quiz_id: quizId,
+          ...form,
+          subcategory_id:
+            quizInfo?.subcategory_id || form.subcategory_id || null,
+        }),
+      });
       const text = await res.text();
       const data = JSON.parse(text);
       setMessage(data.message);
+      setVisible(true);
+
       if (data.question_id) {
         setForm({
           question: "",
@@ -83,8 +77,14 @@ const CreateQuizQuestions = () => {
           subcategory_id: "",
         });
       }
+
+      setTimeout(() => setVisible(false), 2500);
+      setTimeout(() => setMessage(""), 3500); // let it fade first
     } catch (err) {
       setMessage("Error: " + err.message);
+      setVisible(true);
+      setTimeout(() => setVisible(false), 2500);
+      setTimeout(() => setMessage(""), 3500);
     }
   };
 
@@ -96,12 +96,25 @@ const CreateQuizQuestions = () => {
             <div className="mb-3 text-center">
               <h2>{quizInfo.name}</h2>
             </div>
-            {message && <p className="text-warning text-center">{message}</p>}
+
+            {message && (
+              <div
+                className="text-warning text-center"
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transition: "opacity 1s ease-in-out",
+                }}
+              >
+                {message}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
               {quizInfo.subcategory_id ? (
                 <div className="mb-3 text-center text-secondary">
-                  Subcategory locked: <strong><div id={quizInfo.subcategory_name}></div></strong>
+                  Category: <strong>{quizInfo.category_name || "?"}</strong> |
+                  Subcategory:{" "}
+                  <strong>{quizInfo.subcategory_name || "None"}</strong>
                 </div>
               ) : (
                 <div className="mb-3">
@@ -137,22 +150,24 @@ const CreateQuizQuestions = () => {
                 />
               </div>
 
-              {["option_a", "option_b", "option_c", "option_d"].map((opt, i) => (
-                <div className="mb-3" key={opt}>
-                  <label htmlFor={opt} className="form-label">
-                    Option {String.fromCharCode(65 + i)}
-                  </label>
-                  <input
-                    id={opt}
-                    name={opt}
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={form[opt]}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              ))}
+              {["option_a", "option_b", "option_c", "option_d"].map(
+                (opt, i) => (
+                  <div className="mb-3" key={opt}>
+                    <label htmlFor={opt} className="form-label">
+                      Option {String.fromCharCode(65 + i)}
+                    </label>
+                    <input
+                      id={opt}
+                      name={opt}
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={form[opt]}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                )
+              )}
 
               <div className="mb-3">
                 <label htmlFor="correct_option" className="form-label">

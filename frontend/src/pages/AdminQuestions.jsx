@@ -154,19 +154,27 @@ const AdminQuestions = () => {
                   <td>{q.question}</td>
                   <td>{q.category_name}</td>
                   <td>{q.difficulty}</td>
-                  <td className="d-flex gap-2">
-                    <button
-                      className="btn btn-sm btn-outline-warning"
-                      onClick={() => openEdit(q)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => setDelQuestion(q)}
-                    >
-                      Delete
-                    </button>
+                  <td
+                    style={{
+                      textAlign: "center",
+                      verticalAlign: "middle",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <div className="d-inline-flex gap-2">
+                      <button
+                        className="btn btn-sm btn-outline-warning"
+                        onClick={() => openEdit(q)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => setDelQuestion(q)}
+                        >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

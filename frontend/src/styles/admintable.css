@@ -1,0 +1,50 @@
+/* admintable.css */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  
+  .table th,
+  .table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+  }
+  
+  .table th {
+    white-space: nowrap;
+    text-align: center;
+    font-weight: 600;
+  }
+  
+  .table td:last-child,
+  .table th:last-child {
+    text-align: center;
+  }
+  
+  /* Column sizing */
+  .table th:nth-child(1),
+  .table td:nth-child(1) {
+    width: 60px;
+  }
+  
+  .table th:nth-child(2),
+  .table td:nth-child(2) {
+    min-width: 160px;
+  }
+  
+  .table th:nth-child(3),
+  .table td:nth-child(3) {
+    min-width: 200px;
+  }
+  
+  /* Keep action buttons from stacking */
+  .table td .btn {
+    margin: 2px;
+    white-space: nowrap;
+  }
+  

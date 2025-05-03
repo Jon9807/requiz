@@ -10,7 +10,7 @@ class OpenAIController {
 
     public function __construct($apiKey) {
         $this->apiKey = $apiKey;
-        // Increase timeout and allow more tokens for larger quizzes
+        //increase timeout and allow more tokens for larger quizzes
         $this->client = new Client([
             'base_uri'        => 'https://api.openai.com/v1/',
             'timeout'         => 60.0,   // total request timeout
@@ -45,7 +45,7 @@ class OpenAIController {
                         ['role' => 'system',  'content' => 'You are a helpful quiz generator.'],
                         ['role' => 'user',    'content' => $prompt],
                     ],
-                    // allow up to 1500 tokens so 15 questions can fit
+                    //allow up to 1500 tokens so 15 questions can fit
                     'max_tokens'  => 1500,
                     'temperature' => 0.7,
                 ],
@@ -54,13 +54,13 @@ class OpenAIController {
             $body = json_decode($response->getBody(), true);
             $content = trim($body['choices'][0]['message']['content'] ?? '');
 
-            // Strip ``` markers if present
+            //Strip ``` markers if present
             if (strpos($content, "```") === 0) {
                 $content = preg_replace('/^```(?:json)?\s*/i', '', $content);
                 $content = preg_replace('/\s*```$/', '', $content);
             }
 
-            // Extract first JSON array
+            //Extract first JSON array
             $start = strpos($content, "[");
             $end   = strrpos($content, "]");
             if ($start !== false && $end !== false) {

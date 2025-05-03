@@ -70,17 +70,35 @@ class QuizController
     }
 
     //get quiz details for a given quiz id and user id.
-    public function getQuizById($quizId, $userId) {
-        $stmt = $this->conn->prepare("SELECT * FROM user_quizzes WHERE id = ? AND user_id = ?");
+    public function getQuizById($quizId, $userId)
+    {
+        $sql = "
+            SELECT q.*, 
+                   c.name AS category_name, 
+                   s.name AS subcategory_name
+            FROM user_quizzes q
+            JOIN categories c ON q.category_id = c.id
+            LEFT JOIN subcategories s ON q.subcategory_id = s.id
+            WHERE q.id = ? AND q.user_id = ?
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) {
+            return null;
+        }
+
         $stmt->bind_param("ii", $quizId, $userId);
         $stmt->execute();
         $result = $stmt->get_result();
-        $quiz = $result->fetch_assoc();
-        $stmt->close();
-    
-        return $quiz ?: null;
+
+        if ($result && $result->num_rows > 0) {
+            return $result->fetch_assoc();
+        }
+
+        return null;
     }
-    
+
+
     //update quiz details.
     public function edit($data, $userId)
     {

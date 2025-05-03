@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const API_BASE = "http://localhost/re-quiz-app/backend/index.php";
+import { API_BASE } from "../config"; // ✅ using global config
 
 export default function QuizGenerator() {
   const [categories, setCategories] = useState([]);

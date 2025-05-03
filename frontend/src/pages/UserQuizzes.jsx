@@ -1,6 +1,7 @@
 //UserQuizzes.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE } from "../config";
 
 const UserQuizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -13,16 +14,13 @@ const UserQuizzes = () => {
       return;
     }
 
-    fetch(
-      "http://localhost/re-quiz-app/backend/index.php?action=get_user_quizzes",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    fetch(`${API_BASE}?action=get_user_quizzes`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((response) => {
         if (response.status === 401) {
           // backend uses 401 to signal “no quizzes”

@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE } from "../config";
+
 
 const PlayUserQuiz = () => {
   const { quizId }       = useParams();
@@ -21,7 +23,7 @@ const PlayUserQuiz = () => {
 
   // Fetch questions + category
   useEffect(() => {
-    const url = `http://localhost/re-quiz-app/backend/index.php?action=get_quiz_questions&quiz_id=${quizId}`;
+    const url = `${API_BASE}?action=get_quiz_questions&quiz_id=${quizId}`;
     const headers = { "Content-Type": "application/json" };
     if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -46,7 +48,7 @@ const PlayUserQuiz = () => {
       questions_answered: questions.length,
       duration_seconds,
     };
-    fetch("http://localhost/re-quiz-app/backend/index.php?action=save_session", {
+    fetch(`${API_BASE}?action=save_session`, {
       method:  "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,5 +1,7 @@
 // src/pages/AdminUsers.jsx
 import React, { useState, useEffect } from "react";
+import { API_BASE } from "../config"; // adjust if your path is different
+
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -15,10 +17,9 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost/re-quiz-app/backend/index.php?action=get_all_users",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`${API_BASE}?action=get_all_users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const data = await res.json();
       setUsers(data.users || []);
     } catch {
@@ -32,20 +33,16 @@ const AdminUsers = () => {
     fetchUsers();
   }, []);
 
-  // handle delete
   const handleDelete = async () => {
     try {
-      const res = await fetch(
-        "http://localhost/re-quiz-app/backend/index.php?action=delete_user",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ user_id: deleteUser.id }),
-        }
-      );
+      const res = await fetch(`${API_BASE}?action=delete_user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id: deleteUser.id }),
+      });
       const data = await res.json();
       if (res.ok) {
         setUsers((u) => u.filter((x) => x.id !== deleteUser.id));
@@ -67,25 +64,21 @@ const AdminUsers = () => {
     setEditForm({ username: u.username, email: u.email, role: u.role });
   };
 
-  // save edit
   const handleSave = async () => {
     try {
-      const res = await fetch(
-        "http://localhost/re-quiz-app/backend/index.php?action=update_user",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            user_id: editUser.id,
-            username: editForm.username,
-            email: editForm.email,
-            role: editForm.role,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE}?action=update_user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: editUser.id,
+          username: editForm.username,
+          email: editForm.email,
+          role: editForm.role,
+        }),
+      });
       const data = await res.json();
       if (res.ok) {
         setUsers((u) =>

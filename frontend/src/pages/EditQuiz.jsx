@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_BASE } from "../config"; // adjust path if needed
 
 const ConfirmDialog = ({ show, title, message, onConfirm, onCancel }) => {
   if (!show) return null;
@@ -40,34 +41,59 @@ const ConfirmDialog = ({ show, title, message, onConfirm, onCancel }) => {
 const EditQuiz = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
-  const [quiz, setQuiz] = useState({ name: "", description: "", is_public: false });
+  const token = localStorage.getItem("token");
+
+  const [quiz, setQuiz] = useState({
+    name: "",
+    description: "",
+    is_public: false,
+  });
   const [quizMessage, setQuizMessage] = useState("");
-  const [quizQuestions, setQuizQuestions] = useState([]);
   const [questionMessage, setQuestionMessage] = useState("");
+  const [quizQuestions, setQuizQuestions] = useState([]);
   const [newQuestionForm, setNewQuestionForm] = useState({
-    question: "", option_a: "", option_b: "", option_c: "", option_d: "", correct_option: ""
+    question: "",
+    option_a: "",
+    option_b: "",
+    option_c: "",
+    option_d: "",
+    correct_option: "",
   });
   const [editingQuestionId, setEditingQuestionId] = useState(null);
   const [editQuestionForm, setEditQuestionForm] = useState({
-    question: "", option_a: "", option_b: "", option_c: "", option_d: "", correct_option: ""
+    question: "",
+    option_a: "",
+    option_b: "",
+    option_c: "",
+    option_d: "",
+    correct_option: "",
   });
   const [confirmDeleteQuiz, setConfirmDeleteQuiz] = useState(false);
   const [confirmDeleteQuestionId, setConfirmDeleteQuestionId] = useState(null);
 
-  const token = localStorage.getItem("token");
+  // auto-clear quizMessage after 3s
+  useEffect(() => {
+    if (!quizMessage) return;
+    const timer = setTimeout(() => setQuizMessage(""), 3000);
+    return () => clearTimeout(timer);
+  }, [quizMessage]);
+
+  // auto-clear questionMessage after 3s
+  useEffect(() => {
+    if (!questionMessage) return;
+    const timer = setTimeout(() => setQuestionMessage(""), 3000);
+    return () => clearTimeout(timer);
+  }, [questionMessage]);
 
   // Load quiz details
   useEffect(() => {
     if (!token) return navigate("/auth");
-    fetch(
-      `http://localhost/re-quiz-app/backend/index.php?action=get_quiz_details&quiz_id=${quizId}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    fetch(`${API_BASE}?action=get_quiz_details&quiz_id=${quizId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.message) {
@@ -85,15 +111,12 @@ const EditQuiz = () => {
 
   // Load quiz questions
   useEffect(() => {
-    fetch(
-      `http://localhost/re-quiz-app/backend/index.php?action=get_quiz_questions&quiz_id=${quizId}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    fetch(`${API_BASE}?action=get_quiz_questions&quiz_id=${quizId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.questions) {
@@ -103,7 +126,7 @@ const EditQuiz = () => {
       .catch((err) => console.error("Error fetching quiz questions:", err));
   }, [quizId, token]);
 
-  // Quiz detail handlers
+  // Handler for quiz form inputs
   const handleQuizChange = (e) => {
     const { name, value, type, checked } = e.target;
     setQuiz((prev) => ({
@@ -112,7 +135,7 @@ const EditQuiz = () => {
     }));
   };
 
-  const handleQuizSubmit = async (e) => {
+  const handleQuizSubmit = (e) => {
     e.preventDefault();
     const payload = {
       quiz_id: quizId,
@@ -120,7 +143,7 @@ const EditQuiz = () => {
       description: quiz.description,
       is_public: quiz.is_public ? 1 : 0,
     };
-    fetch("http://localhost/re-quiz-app/backend/index.php?action=edit_quiz", {
+    fetch(`${API_BASE}?action=edit_quiz`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -129,14 +152,22 @@ const EditQuiz = () => {
       body: JSON.stringify(payload),
     })
       .then((res) => res.json())
-      .then((data) => setQuizMessage(data.message))
+      .then((data) => {
+        // catch both “fail to update quiz” and “failed to update quiz”
+        let msg = data.message;
+        if (/fail(ed)? to update quiz/i.test(msg)) {
+          msg = "Up to date";
+        }
+        setQuizMessage(msg);
+      })
       .catch((err) => setQuizMessage("Error: " + err.message));
   };
+  
 
   const handleDeleteQuiz = () => setConfirmDeleteQuiz(true);
   const doDeleteQuiz = () => {
     setConfirmDeleteQuiz(false);
-    fetch("http://localhost/re-quiz-app/backend/index.php?action=delete_quiz", {
+    fetch(`${API_BASE}?action=delete_quiz`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -161,7 +192,7 @@ const EditQuiz = () => {
   const handleNewQuestionSubmit = (e) => {
     e.preventDefault();
     const payload = { quiz_id: quizId, ...newQuestionForm };
-    fetch("http://localhost/re-quiz-app/backend/index.php?action=create_quiz_question", {
+    fetch(`${API_BASE}?action=create_quiz_question`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -177,11 +208,7 @@ const EditQuiz = () => {
             ...prev,
             {
               id: data.question_id,
-              question: newQuestionForm.question,
-              option_a: newQuestionForm.option_a,
-              option_b: newQuestionForm.option_b,
-              option_c: newQuestionForm.option_c,
-              option_d: newQuestionForm.option_d,
+              ...newQuestionForm,
               correct_option: newQuestionForm.correct_option.toUpperCase(),
             },
           ]);
@@ -198,13 +225,12 @@ const EditQuiz = () => {
       .catch((err) => setQuestionMessage("Error: " + err.message));
   };
 
-  const handleDeleteQuestion = (questionId) =>
-    setConfirmDeleteQuestionId(questionId);
-
+  // Delete question
+  const handleDeleteQuestion = (id) => setConfirmDeleteQuestionId(id);
   const doDeleteQuestion = () => {
     const id = confirmDeleteQuestionId;
     setConfirmDeleteQuestionId(null);
-    fetch("http://localhost/re-quiz-app/backend/index.php?action=delete_quiz_question", {
+    fetch(`${API_BASE}?action=delete_quiz_question`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -220,7 +246,7 @@ const EditQuiz = () => {
       .catch((err) => setQuestionMessage("Error: " + err.message));
   };
 
-  // Inline edit handlers
+  // Inline edit question
   const handleEditQuestion = (q) => {
     setEditingQuestionId(q.id);
     setEditQuestionForm({
@@ -232,19 +258,17 @@ const EditQuiz = () => {
       correct_option: q.correct_option,
     });
   };
-
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditQuestionForm((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleEditSave = (questionId) => {
     const payload = {
       quiz_id: quizId,
       question_id: questionId,
       ...editQuestionForm,
     };
-    fetch("http://localhost/re-quiz-app/backend/index.php?action=update_quiz_question", {
+    fetch(`${API_BASE}?action=update_quiz_question`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -261,7 +285,8 @@ const EditQuiz = () => {
                 ? {
                     ...q,
                     ...editQuestionForm,
-                    correct_option: editQuestionForm.correct_option.toUpperCase(),
+                    correct_option:
+                      editQuestionForm.correct_option.toUpperCase(),
                   }
                 : q
             )
@@ -273,19 +298,23 @@ const EditQuiz = () => {
       })
       .catch((err) => setQuestionMessage("Error: " + err.message));
   };
-
   const handleEditCancel = () => setEditingQuestionId(null);
 
   return (
     <div className="container mt-5 d-flex justify-content-center">
       <div className="form-wrapper w-100" style={{ maxWidth: "600px" }}>
         <h2 className="mb-4">Edit Quiz</h2>
-        {quizMessage && <p className="text-warning text-center">{quizMessage}</p>}
+
+        {quizMessage && (
+          <p className="text-success text-center">{quizMessage}</p>
+        )}
 
         {/* Quiz Details */}
         <form onSubmit={handleQuizSubmit}>
           <div className="mb-3">
-            <label htmlFor="quizName" className="form-label">Quiz Name</label>
+            <label htmlFor="quizName" className="form-label">
+              Quiz Name
+            </label>
             <input
               id="quizName"
               name="name"
@@ -297,7 +326,9 @@ const EditQuiz = () => {
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="quizDescription" className="form-label">Description</label>
+            <label htmlFor="quizDescription" className="form-label">
+              Description
+            </label>
             <textarea
               id="quizDescription"
               name="description"
@@ -316,17 +347,28 @@ const EditQuiz = () => {
               checked={quiz.is_public}
               onChange={handleQuizChange}
             />
-            <label htmlFor="isPublic" className="form-check-label">Make Quiz Public</label>
+            <label htmlFor="isPublic" className="form-check-label">
+              Make Quiz Public
+            </label>
           </div>
           <div className="d-flex gap-2 mb-4">
-            <button type="submit" className="btn btn-outline-primary btn-sm">Update Quiz</button>
-            <button type="button" className="btn btn-outline-danger btn-sm" onClick={handleDeleteQuiz}>Delete Quiz</button>
+            <button type="submit" className="btn btn-outline-primary btn-sm">
+              Update Quiz
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline-danger btn-sm"
+              onClick={handleDeleteQuiz}
+            >
+              Delete Quiz
+            </button>
           </div>
         </form>
 
-        {/* Add Question */}
         <h3 className="mb-3">Add a New Question</h3>
-        {questionMessage && <p className="text-warning text-center">{questionMessage}</p>}
+        {questionMessage && (
+          <p className="text-success text-center">{questionMessage}</p>
+        )}
         <form onSubmit={handleNewQuestionSubmit}>
           <div className="mb-3">
             <label className="form-label">Question</label>
@@ -341,7 +383,9 @@ const EditQuiz = () => {
           </div>
           {["option_a", "option_b", "option_c", "option_d"].map((opt, i) => (
             <div className="mb-3" key={opt}>
-              <label className="form-label">Option {String.fromCharCode(65 + i)}</label>
+              <label className="form-label">
+                Option {String.fromCharCode(65 + i)}
+              </label>
               <input
                 name={opt}
                 className="form-control form-control-sm"
@@ -366,13 +410,16 @@ const EditQuiz = () => {
           </div>
         </form>
 
-        {/* Questions List */}
         <h3>Quiz Questions</h3>
         <ul className="list-group">
           {quizQuestions.map((q) => (
-            <li key={q.id} className="list-group-item mb-3 question-card text-light">
+            <li
+              key={q.id}
+              className="list-group-item mb-3 question-card text-light"
+            >
               {editingQuestionId === q.id ? (
                 <>
+                  {/* edit form */}
                   <div className="mb-2">
                     <label className="form-label">Question</label>
                     <textarea
@@ -383,17 +430,21 @@ const EditQuiz = () => {
                       onChange={handleEditChange}
                     />
                   </div>
-                  {["option_a", "option_b", "option_c", "option_d"].map((opt, i) => (
-                    <div className="mb-2" key={opt}>
-                      <label className="form-label">Option {String.fromCharCode(65 + i)}</label>
-                      <input
-                        name={opt}
-                        className="form-control form-control-sm"
-                        value={editQuestionForm[opt]}
-                        onChange={handleEditChange}
-                      />
-                    </div>
-                  ))}
+                  {["option_a", "option_b", "option_c", "option_d"].map(
+                    (opt, i) => (
+                      <div className="mb-2" key={opt}>
+                        <label className="form-label">
+                          Option {String.fromCharCode(65 + i)}
+                        </label>
+                        <input
+                          name={opt}
+                          className="form-control form-control-sm"
+                          value={editQuestionForm[opt]}
+                          onChange={handleEditChange}
+                        />
+                      </div>
+                    )
+                  )}
                   <div className="mb-3">
                     <label className="form-label">Correct Option</label>
                     <input
@@ -404,20 +455,46 @@ const EditQuiz = () => {
                     />
                   </div>
                   <div className="d-flex gap-2">
-                    <button className="btn btn-sm btn-outline-success" onClick={() => handleEditSave(q.id)}>Save</button>
-                    <button className="btn btn-sm btn-outline-light" onClick={handleEditCancel}>Cancel</button>
+                    <button
+                      className="btn btn-sm btn-outline-success"
+                      onClick={() => handleEditSave(q.id)}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-light"
+                      onClick={handleEditCancel}
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <p><strong>Question:</strong> {q.question}</p>
+                  <p>
+                    <strong>Question:</strong> {q.question}
+                  </p>
                   {["A", "B", "C", "D"].map((l) => (
-                    <p key={l}><strong>{l}:</strong> {q[`option_${l.toLowerCase()}`]}</p>
+                    <p key={l}>
+                      <strong>{l}:</strong> {q[`option_${l.toLowerCase()}`]}
+                    </p>
                   ))}
-                  <p><strong>Correct:</strong> {q.correct_option}</p>
+                  <p>
+                    <strong>Correct:</strong> {q.correct_option}
+                  </p>
                   <div className="d-flex gap-2">
-                    <button className="btn btn-sm btn-outline-warning" onClick={() => handleEditQuestion(q)}>Edit</button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteQuestion(q.id)}>Delete</button>
+                    <button
+                      className="btn btn-sm btn-outline-warning"
+                      onClick={() => handleEditQuestion(q)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleDeleteQuestion(q.id)}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </>
               )}

@@ -1,11 +1,8 @@
-// src/pages/Profile.jsx
-
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE } from "../config";
 import "../styles/Profile.css";
-
-const API_BASE = "http://localhost/re-quiz-app";
 
 export default function Profile() {
   const { logout, token } = useContext(AuthContext);
@@ -16,6 +13,7 @@ export default function Profile() {
     email: "",
     bio: "",
   });
+
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [fileInput, setFileInput] = useState(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
@@ -27,19 +25,22 @@ export default function Profile() {
       navigate("/auth");
       return;
     }
-    fetch(`${API_BASE}/backend/index.php?action=get_profile`, {
+
+    fetch(`${API_BASE}?action=get_profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         if (data.username) {
           setForm({
             username: data.username,
             email: data.email,
             bio: data.bio || "",
           });
+
           if (data.profile_pic) {
-            setAvatarUrl(`${API_BASE}/backend/${data.profile_pic}`);
+            const base = API_BASE.split("/index.php")[0];
+            setAvatarUrl(`${base}/${data.profile_pic}`);
           }
         } else {
           setMessage(data.message || "Failed to load profile");
@@ -48,17 +49,18 @@ export default function Profile() {
       .catch(() => setMessage("Failed to load profile"));
   }, [token, navigate]);
 
-  // Handle text field changes
-  const handleChange = e => {
+  // Handle input changes
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
+    setForm((f) => ({ ...f, [name]: value }));
   };
 
-  // Handle new file selection & preview
-  const handleFile = e => {
+  // Handle new file selection and preview
+  const handleFile = (e) => {
     const file = e.target.files[0];
     setFileInput(file);
     setRemoveAvatar(false);
+
     if (file) {
       const reader = new FileReader();
       reader.onload = () => setAvatarUrl(reader.result);
@@ -66,32 +68,29 @@ export default function Profile() {
     }
   };
 
-  // Mark avatar for removal locally
+  // Remove avatar locally
   const handleRemove = () => {
     setRemoveAvatar(true);
     setAvatarUrl(null);
     setFileInput(null);
   };
 
-  // Submit updates (including file upload and/or removal)
-  const handleSubmit = async e => {
+  // Submit updates
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // If they clicked Remove, fire that endpoint first
     if (removeAvatar) {
-      const rem = await fetch(
-        `${API_BASE}/backend/index.php?action=remove_profile_pic`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      const info = await rem.json();
-      setMessage(info.message);
+      await fetch(`${API_BASE}?action=remove_profile_pic`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setMessage(data.message))
+        .catch(() => setMessage("Failed to remove profile picture"));
+
       setRemoveAvatar(false);
     }
 
-    // Then send any new uploads + text fields
     const fd = new FormData();
     fd.append("username", form.username);
     fd.append("email", form.email);
@@ -100,18 +99,16 @@ export default function Profile() {
       fd.append("profile_pic", fileInput);
     }
 
-    const res = await fetch(
-      `${API_BASE}/backend/index.php?action=update_profile`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
-      }
-    );
+    const res = await fetch(`${API_BASE}?action=update_profile`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    });
+
     const data = await res.json();
     setMessage(data.message);
+
     if (res.ok) {
-      // reload to pick up new picture from server
       setTimeout(() => window.location.reload(), 800);
     }
   };
@@ -131,7 +128,6 @@ export default function Profile() {
           )}
         </div>
 
-        {/* only show “Remove” if there's an existing avatar to clear */}
         {avatarUrl && (
           <button
             type="button"

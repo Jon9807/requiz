@@ -2,19 +2,21 @@
 import React, { useContext } from "react";
 import { NavLink } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+
 import "../styles/Navbar.css";
+import { API_BASE } from "../config";
 
 import logo from "../assets/relogo.png";
 
-const API_BASE = "http://localhost/re-quiz-app";
-
 export default function Navbar() {
-  const { token, user } = useContext(AuthContext);
+  const { token, user, ready } = useContext(AuthContext);
+
+  if (!ready) return null;
 
   // Build avatar URL only if they have uploaded one
   const avatarUrl =
     token && user && user.profile_pic
-      ? `${API_BASE}/backend/${user.profile_pic}`
+      ? `${API_BASE.replace("/index.php", "")}/${user.profile_pic}`
       : null;
 
   return (

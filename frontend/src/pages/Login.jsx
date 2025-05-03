@@ -2,6 +2,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE } from "../config";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,7 +14,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost/re-quiz-app/backend/index.php?action=login", {
+      const response = await fetch(`${API_BASE}?action=login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -31,28 +32,32 @@ const Login = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="d-flex flex-column">
-      <input
-        type="email"
-        name="email"
-        className="form-control mb-3"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        name="password"
-        className="form-control mb-4"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button type="submit" className="btn w-100">Log in</button>
-      {message && <p className="mt-3 text-danger text-center">{message}</p>}
-    </form>
+    <div className="glass-panel p-4 login-card">
+      <form onSubmit={handleSubmit} className="d-flex flex-column">
+        <input
+          type="email"
+          name="email"
+          className="form-control mb-3"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          className="form-control mb-4"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit" className="btn w-100">
+          Log in
+        </button>
+        {message && <p className="mt-3 text-danger text-center">{message}</p>}
+      </form>
+    </div>
   );
 };
 

@@ -145,3 +145,67 @@
   background: var(--neon-glow);
   color: #111;
 } */
+
+.table tbody tr {
+  word-wrap: normal;
+  overflow-wrap: normal;
+}
+.table tbody tr td[data-label="Date"] {
+  white-space: nowrap;
+  word-break: normal;
+}
+
+
+@media (max-width: 576px) {
+  
+  .table thead {
+    display: none;
+  }
+
+  .table tbody {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* center cards horizontally */
+  }
+
+  .table tbody tr {
+    display: block;
+    width: 90%;
+    max-width: 380px;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .table tbody tr td {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;           
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+    gap: 0.5rem;
+  }
+
+  .table tbody tr td:last-child {
+    border-bottom: none;
+  }
+
+  .table tbody tr td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #ff82bc;
+    flex: 0 0 40%;
+    white-space: nowrap;
+  }
+
+  .table tbody tr td button {
+    white-space: nowrap;
+  }
+}

@@ -2,6 +2,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE } from "../config"; // ✅ new line
+
 
 const Home = () => {
   const { token, user } = useContext(AuthContext);
@@ -10,10 +12,8 @@ const Home = () => {
 
   // Fetch some public quizzes
   useEffect(() => {
-    fetch(
-      "http://localhost/re-quiz-app/backend/index.php?action=public_quizzes",
-      {
-        method: "GET",
+    fetch(`${API_BASE}?action=public_quizzes`, {
+      method: "GET",
         headers: { "Content-Type": "application/json" },
       }
     )

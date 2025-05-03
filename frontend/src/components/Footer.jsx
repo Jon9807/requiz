@@ -8,7 +8,7 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="footer-content">
         <div className="footer-social">
-          <a href="mailto:jontrump3@gmail.com" aria-label="Email" className="footer-icon">
+          <a href="mailto:ngunhmung623@gmail.com" aria-label="Email" className="footer-icon">
             <Mail size={20}/>
           </a>
           <a href="https://www.facebook.com/share/1GADxj5JsK/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="footer-icon">

@@ -53,7 +53,7 @@ export default function About() {
         <p>Found a bug or have a feature idea? Reach out on:</p>
         <div className="social-links">
           <a
-            href="mailto:jontrump3@gmail.com"
+            href="mailto:ngunhmung623@gmail.com"
             aria-label="Email"
             title="Email"
             className="social-icon"

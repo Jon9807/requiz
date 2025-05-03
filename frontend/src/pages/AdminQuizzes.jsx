@@ -1,5 +1,7 @@
 // src/pages/AdminQuizzes.jsx
 import React, { useState, useEffect } from "react";
+import { API_BASE } from "../config";
+import "../styles/admintable.css";
 
 const AdminQuizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -10,18 +12,16 @@ const AdminQuizzes = () => {
   const [editForm, setEditForm] = useState({
     name: "",
     description: "",
-    is_public: false
+    is_public: false,
   });
   const token = localStorage.getItem("token");
 
-  //loader
   const loadQuizzes = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost/re-quiz-app/backend/index.php?action=get_all_quizzes",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`${API_BASE}?action=get_all_quizzes`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       setQuizzes(data.quizzes || []);
     } catch {
@@ -37,17 +37,14 @@ const AdminQuizzes = () => {
 
   const handleDelete = async () => {
     try {
-      const res = await fetch(
-        "http://localhost/re-quiz-app/backend/index.php?action=admin_delete_quiz",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ quiz_id: delQuiz.id })
-        }
-      );
+      const res = await fetch(`${API_BASE}?action=admin_delete_quiz`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ quiz_id: delQuiz.id }),
+      });
       const data = await res.json();
       if (res.ok) {
         setMessage("Quiz deleted");
@@ -69,28 +66,25 @@ const AdminQuizzes = () => {
     setEditForm({
       name: q.name,
       description: q.description,
-      is_public: q.is_public === 1
+      is_public: q.is_public === 1,
     });
   };
 
   const handleSave = async () => {
     try {
-      const res = await fetch(
-        "http://localhost/re-quiz-app/backend/index.php?action=update_quiz",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            quiz_id: editQuiz.id,
-            name: editForm.name,
-            description: editForm.description,
-            is_public: editForm.is_public ? 1 : 0
-          })
-        }
-      );
+      const res = await fetch(`${API_BASE}?action=update_quiz`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          quiz_id: editQuiz.id,
+          name: editForm.name,
+          description: editForm.description,
+          is_public: editForm.is_public ? 1 : 0,
+        }),
+      });
       const data = await res.json();
       if (res.ok) {
         setMessage("Quiz updated");
@@ -101,7 +95,7 @@ const AdminQuizzes = () => {
                   ...x,
                   name: editForm.name,
                   description: editForm.description,
-                  is_public: editForm.is_public ? 1 : 0
+                  is_public: editForm.is_public ? 1 : 0,
                 }
               : x
           )
@@ -152,22 +146,28 @@ const AdminQuizzes = () => {
                   <td>{q.description}</td>
                   <td>{q.is_public ? "Yes" : "No"}</td>
                   <td>{q.creator}</td>
-                  <td>
-                    {new Date(q.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="d-flex gap-2">
-                    <button
-                      className="btn btn-sm btn-outline-warning"
-                      onClick={() => openEdit(q)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => setDelQuiz(q)}
-                    >
-                      Delete
-                    </button>
+                  <td>{new Date(q.created_at).toLocaleDateString()}</td>
+                  <td
+                    style={{
+                      textAlign: "center",
+                      verticalAlign: "middle",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <div className="d-inline-flex gap-2">
+                      <button
+                        className="btn btn-sm btn-outline-warning"
+                        onClick={() => openEdit(q)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => setDelQuiz(q)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -194,8 +194,8 @@ const AdminQuizzes = () => {
                 />
               </div>
               <div className="modal-body">
-                Are you sure you want to delete{" "}
-                <strong>{delQuiz.name}</strong>?<br />
+                Are you sure you want to delete <strong>{delQuiz.name}</strong>?
+                <br />
                 This action cannot be undone.
               </div>
               <div className="modal-footer">
@@ -254,7 +254,7 @@ const AdminQuizzes = () => {
                     onChange={(e) =>
                       setEditForm((f) => ({
                         ...f,
-                        description: e.target.value
+                        description: e.target.value,
                       }))
                     }
                   />
@@ -268,7 +268,7 @@ const AdminQuizzes = () => {
                     onChange={(e) =>
                       setEditForm((f) => ({
                         ...f,
-                        is_public: e.target.checked
+                        is_public: e.target.checked,
                       }))
                     }
                   />
@@ -284,10 +284,7 @@ const AdminQuizzes = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className="btn btn-sm btn-success"
-                  onClick={handleSave}
-                >
+                <button className="btn btn-sm btn-success" onClick={handleSave}>
                   Save Changes
                 </button>
               </div>
